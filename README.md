@@ -38,11 +38,6 @@ npm start
 - 老师后台：`http://localhost:3000/teacher.html`
 - 学生端 Web 演示：`http://localhost:3000/student.html`
 
-首次启动会自动创建默认老师账号：
-
-- 用户名：`admin`
-- 密码：`admin123`
-
 ## 3. 数据模型
 
 ### teachers（老师）
@@ -206,7 +201,7 @@ npm start
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `SUPABASE_STORAGE_BUCKET`
-4. 首次启动会自动建表并初始化默认老师账号。
+4. 首次启动会自动建表（不会自动创建老师账号，请手动插入老师用户）。
 
 可选（CLI）：
 ```bash

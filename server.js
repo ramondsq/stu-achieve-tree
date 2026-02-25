@@ -754,13 +754,6 @@ async function initDb() {
     ON knowledge_nodes(tree_id)
     WHERE parent_id IS NULL
   `);
-
-  const admin = await dbGet('SELECT id FROM teachers WHERE username = ?', ['admin']);
-  if (!admin) {
-    const passwordHash = createPasswordHash('admin123');
-    await dbRun('INSERT INTO teachers (username, password_hash) VALUES (?, ?)', ['admin', passwordHash]);
-    console.log('已创建默认老师账号: admin / admin123');
-  }
 }
 
 app.use(asyncHandler(async (_req, _res, next) => {
