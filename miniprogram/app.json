@@ -10,6 +10,12 @@
     "backgroundColor": "#f6f7fb",
     "backgroundTextStyle": "light"
   },
+  "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.camera": {
+      "desc": "用于拍照上传代码图片"
+    }
+  },
   "style": "v2",
   "sitemapLocation": "sitemap.json"
 }

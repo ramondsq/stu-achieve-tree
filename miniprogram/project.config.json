@@ -30,9 +30,10 @@
     }
   },
   "compileType": "miniprogram",
-  "appid": "wxd360848fe81ee2af",
+  "appid": "wx62d436813127cfed",
   "projectname": "learning-achievement-tree-mini",
   "condition": {},
   "simulatorPluginLibVersion": {},
-  "editorSetting": {}
+  "editorSetting": {},
+  "libVersion": "3.14.2"
 }

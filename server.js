@@ -4,7 +4,7 @@ const path = require('path');
 
 const cookieParser = require('cookie-parser');
 const express = require('express');
-const { Pool } = require('pg');
+const { Pool, types: pgTypes } = require('pg');
 const { createClient } = require('@supabase/supabase-js');
 
 const PORT = Number(process.env.PORT || 3000);
@@ -21,6 +21,11 @@ const APP_SECRET = process.env.APP_SECRET || 'dev-secret-change-me';
 const SUPABASE_STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'code-images';
 const USE_SUPABASE_STORAGE = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 let sqlite3 = null;
+
+if (pgTypes && typeof pgTypes.setTypeParser === 'function') {
+  // Keep BIGINT fields consistent with sqlite numeric behavior for IDs and counts.
+  pgTypes.setTypeParser(20, (value) => Number(value));
+}
 
 if (!USE_POSTGRES) {
   try {
@@ -1004,7 +1009,7 @@ app.post('/api/trees/:treeId/nodes', requireTeacher, asyncHandler(async (req, re
   }
 
   const parent = await dbGet('SELECT id, tree_id FROM knowledge_nodes WHERE id = ?', [parentId]);
-  if (!parent || parent.tree_id !== treeId) {
+  if (!parent || Number(parent.tree_id) !== treeId) {
     throw new AppError(400, '父节点不存在或不属于当前学习树');
   }
 
@@ -1065,12 +1070,12 @@ app.put('/api/nodes/:id', requireTeacher, asyncHandler(async (req, res) => {
   }
 
   if (parentId !== null) {
-    if (parentId === existing.id) {
+    if (parentId === Number(existing.id)) {
       throw new AppError(400, '父节点不能是自己');
     }
 
     const parent = await dbGet('SELECT id, tree_id FROM knowledge_nodes WHERE id = ?', [parentId]);
-    if (!parent || parent.tree_id !== existing.tree_id) {
+    if (!parent || Number(parent.tree_id) !== Number(existing.tree_id)) {
       throw new AppError(400, '父节点不存在或不在同一棵树中');
     }
 
