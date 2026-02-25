@@ -1,0 +1,51 @@
+<view class="container">
+  <view class="title">学习成就树</view>
+
+  <view class="card">
+    <view class="subtle">学生账号登录</view>
+
+    <view class="form-item">
+      <input
+        class="input"
+        placeholder="学生用户名"
+        value="{{username}}"
+        bindinput="onUsernameInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <input
+        class="input"
+        type="password"
+        placeholder="学生密码"
+        value="{{password}}"
+        bindinput="onPasswordInput"
+      />
+    </view>
+
+    <view wx:if="{{errorText}}" class="error">{{errorText}}</view>
+    <view wx:if="{{successText}}" class="success">{{successText}}</view>
+
+    <button class="btn primary" loading="{{loading}}" bindtap="handlePasswordLogin">
+      账号登录
+    </button>
+  </view>
+
+  <view class="card">
+    <view class="subtle">微信登录 / 绑定</view>
+    <view class="subtle" style="margin-top: 10rpx;">
+      1. 若已绑定账号，可直接点“微信登录”
+    </view>
+    <view class="subtle">
+      2. 首次使用，请先填账号密码后点“微信绑定并登录”
+    </view>
+
+    <button class="btn ghost" loading="{{loading}}" bindtap="handleWechatLogin">
+      微信登录（已绑定）
+    </button>
+
+    <button class="btn warn" loading="{{loading}}" bindtap="handleWechatBind">
+      微信绑定并登录
+    </button>
+  </view>
+</view>

@@ -1,0 +1,73 @@
+page {
+  background: #f6f7fb;
+  color: #1f2937;
+  font-size: 30rpx;
+}
+
+.container {
+  padding: 24rpx;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(17, 24, 39, 0.06);
+}
+
+.title {
+  font-size: 40rpx;
+  font-weight: 700;
+  margin-bottom: 18rpx;
+}
+
+.subtle {
+  color: #6b7280;
+  font-size: 24rpx;
+}
+
+.form-item {
+  margin-bottom: 16rpx;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid #dce2ee;
+  border-radius: 14rpx;
+  padding: 18rpx;
+  background: #fff;
+}
+
+.btn {
+  margin-top: 10rpx;
+  border-radius: 14rpx;
+  font-size: 30rpx;
+}
+
+.btn.primary {
+  color: #fff;
+  background: #2459d6;
+}
+
+.btn.warn {
+  color: #fff;
+  background: #e67e22;
+}
+
+.btn.ghost {
+  color: #2459d6;
+  background: #ebf1ff;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 24rpx;
+  margin-bottom: 8rpx;
+}
+
+.success {
+  color: #166534;
+  font-size: 24rpx;
+  margin-bottom: 8rpx;
+}

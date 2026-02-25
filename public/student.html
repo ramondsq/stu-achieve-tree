@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>学生端 - 学习进度成就树</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>学生端 - 学习进度成就树（Web 演示）</h1>
+      <div id="notice"></div>
+
+      <section class="panel" id="studentLoginPanel">
+        <h2>账号登录</h2>
+        <form id="studentLoginForm">
+          <label for="studentUsername">用户名</label>
+          <input id="studentUsername" required />
+
+          <label for="studentPassword">密码</label>
+          <input id="studentPassword" type="password" required />
+
+          <div style="margin-top: 10px">
+            <button class="primary" type="submit">登录</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel" id="wechatPanel">
+        <h2>微信接口调试（小程序接入用）</h2>
+        <p class="small">需要服务端配置 <code>WECHAT_APPID</code> / <code>WECHAT_SECRET</code> 后可用。</p>
+
+        <form id="wechatLoginForm">
+          <label for="wechatCode">微信 code</label>
+          <input id="wechatCode" placeholder="wx.login() 返回的 code" required />
+          <div style="margin-top: 8px">
+            <button type="submit">微信登录（已绑定账号）</button>
+          </div>
+        </form>
+
+        <hr style="border: none; border-top: 1px solid #e7ebf4; margin: 14px 0" />
+
+        <form id="wechatBindForm">
+          <label for="bindCode">微信 code</label>
+          <input id="bindCode" required />
+
+          <label for="bindUsername">学生用户名</label>
+          <input id="bindUsername" required />
+
+          <label for="bindPassword">学生密码</label>
+          <input id="bindPassword" type="password" required />
+
+          <div style="margin-top: 8px">
+            <button type="submit">绑定并登录</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel" id="studentDashboard" hidden>
+        <div class="toolbar">
+          <div>当前学生：<strong id="studentName"></strong></div>
+          <div class="actions">
+            <button id="reloadTreesBtn">刷新学习树</button>
+            <button id="studentLogoutBtn" class="danger">退出</button>
+          </div>
+        </div>
+
+        <div id="treesContainer"></div>
+      </section>
+    </div>
+
+    <script>
+      const TOKEN_KEY = 'student_access_token';
+      let accessToken = localStorage.getItem(TOKEN_KEY) || '';
+      let currentStudent = null;
+
+      function showNotice(message, type = 'success') {
+        const notice = document.getElementById('notice');
+        if (!message) {
+          notice.innerHTML = '';
+          return;
+        }
+        notice.innerHTML = `<div class="notice ${type === 'error' ? 'error' : 'success'}">${message}</div>`;
+      }
+
+      async function studentApi(path, options = {}) {
+        const headers = options.headers || {};
+        if (accessToken) {
+          headers.Authorization = `Bearer ${accessToken}`;
+        }
+
+        const req = {
+          method: options.method || 'GET',
+          credentials: 'include',
+          headers,
+        };
+
+        if (options.body !== undefined) {
+          req.headers['Content-Type'] = 'application/json';
+          req.body = JSON.stringify(options.body);
+        }
+
+        const response = await fetch(path, req);
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.message || `请求失败 (${response.status})`);
+        }
+        return data;
+      }
+
+      function renderTreeNode(node) {
+        if (!node) return '';
+        const scoreText = node.score !== null && node.score !== undefined
+          ? `<span class="score">分数: ${node.score}${node.comment ? `，评语: ${node.comment}` : ''}</span>`
+          : '';
+
+        const children = (node.children || []).map((child) => renderTreeNode(child)).join('');
+        return `
+          <li class="tree-item">
+            <div>${node.name}${scoreText}</div>
+            ${children ? `<ul>${children}</ul>` : ''}
+          </li>
+        `;
+      }
+
+      function renderTrees(trees) {
+        const container = document.getElementById('treesContainer');
+        if (!trees.length) {
+          container.innerHTML = '<p class="small">还没有可展示的学习树，请联系老师创建章节。</p>';
+          return;
+        }
+
+        container.innerHTML = trees
+          .map((tree) => `
+            <div class="panel">
+              <h3>${tree.title}</h3>
+              <p class="small">${tree.chapterDesc || ''}</p>
+              <div class="tree-box">
+                <ul>
+                  ${tree.root ? renderTreeNode(tree.root) : '<li class="tree-item">暂无节点</li>'}
+                </ul>
+              </div>
+            </div>
+          `)
+          .join('');
+      }
+
+      function refreshAuthUI() {
+        document.getElementById('studentDashboard').hidden = !currentStudent;
+        document.getElementById('studentLoginPanel').hidden = !!currentStudent;
+        document.getElementById('studentName').textContent = currentStudent
+          ? `${currentStudent.username}${currentStudent.name ? ` (${currentStudent.name})` : ''}`
+          : '';
+      }
+
+      async function loadMyTrees() {
+        const trees = await studentApi('/api/student/trees');
+        renderTrees(trees);
+      }
+
+      async function checkStudentSession() {
+        if (!accessToken) {
+          refreshAuthUI();
+          return;
+        }
+        try {
+          currentStudent = await studentApi('/api/student/me');
+          refreshAuthUI();
+          await loadMyTrees();
+        } catch (_err) {
+          accessToken = '';
+          localStorage.removeItem(TOKEN_KEY);
+          currentStudent = null;
+          refreshAuthUI();
+        }
+      }
+
+      function setStudentSession(payload) {
+        accessToken = payload.token;
+        localStorage.setItem(TOKEN_KEY, accessToken);
+        currentStudent = payload.student;
+        refreshAuthUI();
+      }
+
+      document.getElementById('studentLoginForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const username = document.getElementById('studentUsername').value.trim();
+          const password = document.getElementById('studentPassword').value;
+          const payload = await studentApi('/api/student/login', {
+            method: 'POST',
+            body: { username, password },
+          });
+          setStudentSession(payload);
+          showNotice('登录成功');
+          await loadMyTrees();
+        } catch (err) {
+          showNotice(err.message, 'error');
+        }
+      });
+
+      document.getElementById('wechatLoginForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const code = document.getElementById('wechatCode').value.trim();
+          const payload = await studentApi('/api/student/wechat-login', {
+            method: 'POST',
+            body: { code },
+          });
+          setStudentSession(payload);
+          showNotice('微信登录成功');
+          await loadMyTrees();
+        } catch (err) {
+          showNotice(err.message, 'error');
+        }
+      });
+
+      document.getElementById('wechatBindForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const code = document.getElementById('bindCode').value.trim();
+          const username = document.getElementById('bindUsername').value.trim();
+          const password = document.getElementById('bindPassword').value;
+
+          const payload = await studentApi('/api/student/wechat-bind', {
+            method: 'POST',
+            body: { code, username, password },
+          });
+
+          setStudentSession(payload);
+          showNotice('微信绑定并登录成功');
+          await loadMyTrees();
+        } catch (err) {
+          showNotice(err.message, 'error');
+        }
+      });
+
+      document.getElementById('reloadTreesBtn').addEventListener('click', async () => {
+        try {
+          await loadMyTrees();
+          showNotice('学习树已刷新');
+        } catch (err) {
+          showNotice(err.message, 'error');
+        }
+      });
+
+      document.getElementById('studentLogoutBtn').addEventListener('click', async () => {
+        try {
+          await studentApi('/api/student/logout', { method: 'POST' });
+        } catch (_err) {
+        }
+        accessToken = '';
+        currentStudent = null;
+        localStorage.removeItem(TOKEN_KEY);
+        refreshAuthUI();
+        showNotice('已退出');
+      });
+
+      checkStudentSession();
+    </script>
+  </body>
+</html>

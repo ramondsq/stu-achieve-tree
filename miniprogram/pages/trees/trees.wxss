@@ -1,0 +1,101 @@
+@import "../../app.wxss";
+
+.tree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.node-row {
+  padding: 10rpx 0;
+  border-bottom: 1px solid #eef1f7;
+}
+
+.node-work {
+  margin-top: 10rpx;
+  padding: 12rpx;
+  border: 1px solid #dce6f7;
+  border-radius: 14rpx;
+  background: #f9fbff;
+}
+
+.work-toggle-row {
+  margin-top: 10rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.score-value {
+  font-weight: 700;
+}
+
+.score-low {
+  color: #d92d20;
+}
+
+.score-mid {
+  color: #c98a00;
+}
+
+.score-high {
+  color: #1f8f4d;
+}
+
+.code-textarea {
+  width: 100%;
+  min-height: 180rpx;
+  margin-top: 8rpx;
+  border: 1px solid #d5deef;
+  border-radius: 12rpx;
+  background: #fff;
+  padding: 12rpx;
+  box-sizing: border-box;
+}
+
+.action-row {
+  margin-top: 12rpx;
+  display: flex;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+
+.mini-btn {
+  margin: 0;
+  font-size: 24rpx;
+  padding: 0 12rpx;
+}
+
+.image-box {
+  margin-top: 12rpx;
+}
+
+.code-image {
+  width: 100%;
+  border-radius: 12rpx;
+  border: 1px solid #dce6f7;
+  margin-bottom: 10rpx;
+}
+
+.submission-item {
+  margin-top: 12rpx;
+  padding: 12rpx;
+  border: 1px dashed #c9d8f2;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.submission-code {
+  margin-top: 8rpx;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: #f7f9ff;
+  border: 1px solid #dce6f7;
+  border-radius: 10rpx;
+  padding: 10rpx;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 24rpx;
+  line-height: 1.45;
+}

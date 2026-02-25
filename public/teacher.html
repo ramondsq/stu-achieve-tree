@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>老师后台 - 学习进度成就树</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>老师后台 - 学习进度成就树</h1>
+      <div id="notice"></div>
+
+      <section id="loginSection" class="panel">
+        <h2>老师登录</h2>
+        <p class="small">默认账号：<code>admin</code> / <code>admin123</code>（首次启动自动创建）</p>
+        <form id="loginForm">
+          <label for="loginUsername">用户名</label>
+          <input id="loginUsername" name="username" required />
+
+          <label for="loginPassword">密码</label>
+          <input id="loginPassword" name="password" type="password" required />
+
+          <div class="inline" style="margin-top: 10px">
+            <button class="primary" type="submit">登录</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="dashboardSection" hidden>
+        <div class="panel toolbar">
+          <div>
+            <strong>当前老师：</strong><span id="teacherName"></span>
+          </div>
+          <div class="actions">
+            <button id="refreshAllBtn">刷新数据</button>
+            <button id="logoutBtn" class="danger">退出登录</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <section class="panel">
+            <h2>学生管理</h2>
+            <form id="studentForm">
+              <div class="inline">
+                <div>
+                  <label for="studentUsername">用户名</label>
+                  <input id="studentUsername" required />
+                </div>
+                <div>
+                  <label for="studentName">姓名</label>
+                  <input id="studentName" />
+                </div>
+              </div>
+              <label for="studentPassword">初始密码</label>
+              <input id="studentPassword" type="password" required />
+              <div style="margin-top: 10px">
+                <button class="primary" type="submit">新增学生</button>
+              </div>
+            </form>
+
+            <div style="margin-top: 14px; overflow: auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>姓名</th>
+                    <th>微信绑定</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="studentsTbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>学习树管理</h2>
+            <form id="treeForm">
+              <label for="treeTitle">章节标题</label>
+              <input id="treeTitle" required />
+
+              <label for="treeRootName">根节点名称（章节节点）</label>
+              <input id="treeRootName" required />
+
+              <label for="treeDesc">章节描述</label>
+              <textarea id="treeDesc"></textarea>
+
+              <div style="margin-top: 10px">
+                <button class="primary" type="submit">新增学习树</button>
+              </div>
+            </form>
+
+            <div style="margin-top: 14px; overflow: auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>章节标题</th>
+                    <th>知识点数</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="treesTbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>节点管理（XMind 类树结构）</h2>
+            <p class="small">当前选中学习树：<span id="activeTreeLabel">未选择</span></p>
+
+            <form id="nodeForm">
+              <label for="nodeParentSelect">父节点</label>
+              <select id="nodeParentSelect"></select>
+
+              <div class="inline">
+                <div>
+                  <label for="nodeName">节点名称</label>
+                  <input id="nodeName" required />
+                </div>
+                <div>
+                  <label for="nodeSort">排序（整数）</label>
+                  <input id="nodeSort" type="number" value="0" />
+                </div>
+              </div>
+
+              <div style="margin-top: 10px">
+                <button class="primary" type="submit">新增子节点</button>
+              </div>
+            </form>
+
+            <div style="margin-top: 12px">
+              <div class="small" style="margin-bottom: 6px">树图预览</div>
+              <div id="mindmapView" class="mindmap"></div>
+            </div>
+
+            <div style="margin-top: 14px; overflow: auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>节点名</th>
+                    <th>父节点</th>
+                    <th>排序</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="nodesTbody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>评分管理</h2>
+            <div class="inline">
+              <div>
+                <label for="scoreStudentSelect">学生</label>
+                <select id="scoreStudentSelect"></select>
+              </div>
+              <div>
+                <label for="scoreTreeSelect">学习树</label>
+                <select id="scoreTreeSelect"></select>
+              </div>
+            </div>
+            <div style="margin-top: 8px">
+              <button id="loadScoresBtn">加载评分表</button>
+            </div>
+
+            <div style="margin-top: 14px; overflow: auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>知识点</th>
+                    <th>评分</th>
+                    <th>评语</th>
+                    <th>学生代码</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="scoresTbody"></tbody>
+              </table>
+            </div>
+
+            <h3 style="margin-top: 16px">每次提交批改</h3>
+            <div class="small">可对学生每一条提交记录单独评分</div>
+            <div style="margin-top: 10px; overflow: auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>提交ID</th>
+                    <th>知识点</th>
+                    <th>提交时间</th>
+                    <th>提交代码</th>
+                    <th>提交图片</th>
+                    <th>本次评分</th>
+                    <th>本次评语</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="submissionsTbody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const state = {
+        teacher: null,
+        students: [],
+        trees: [],
+        nodesByTree: new Map(),
+        selectedTreeId: null,
+      };
+
+      const noticeEl = document.getElementById('notice');
+      const loginSection = document.getElementById('loginSection');
+      const dashboardSection = document.getElementById('dashboardSection');
+      const teacherNameEl = document.getElementById('teacherName');
+
+      function showNotice(message, type = 'success') {
+        if (!message) {
+          noticeEl.innerHTML = '';
+          return;
+        }
+        noticeEl.innerHTML = `<div class="notice ${type === 'error' ? 'error' : 'success'}">${message}</div>`;
+      }
+
+      async function api(path, options = {}) {
+        const req = {
+          method: options.method || 'GET',
+          credentials: 'include',
+          headers: options.headers || {},
+        };
+
+        if (options.body !== undefined) {
+          req.headers['Content-Type'] = 'application/json';
+          req.body = JSON.stringify(options.body);
+        }
+
+        const response = await fetch(path, req);
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.message || `请求失败 (${response.status})`);
+        }
+        return data;
+      }
+
+      function toTreeOrdered(nodes) {
+        const map = new Map();
+        const roots = [];
+        nodes.forEach((node) => {
+          map.set(node.id, { ...node, children: [] });
+        });
+        map.forEach((node) => {
+          if (node.parent_id === null) {
+            roots.push(node);
+          } else {
+            const parent = map.get(node.parent_id);
+            if (parent) {
+              parent.children.push(node);
+            }
+          }
+        });
+
+        const ordered = [];
+        function walk(node, depth) {
+          ordered.push({ node, depth });
+          node.children
+            .sort((a, b) => (a.sort_order - b.sort_order) || (a.id - b.id))
+            .forEach((child) => walk(child, depth + 1));
+        }
+
+        roots
+          .sort((a, b) => (a.sort_order - b.sort_order) || (a.id - b.id))
+          .forEach((root) => walk(root, 0));
+
+        return ordered;
+      }
+
+      function renderMindmap(nodes) {
+        const view = document.getElementById('mindmapView');
+        if (!nodes || nodes.length === 0) {
+          view.innerHTML = '<span class="small">暂无节点</span>';
+          return;
+        }
+
+        const byParent = new Map();
+        nodes.forEach((node) => {
+          const key = node.parent_id === null ? 'root' : String(node.parent_id);
+          if (!byParent.has(key)) {
+            byParent.set(key, []);
+          }
+          byParent.get(key).push(node);
+        });
+
+        byParent.forEach((list) => {
+          list.sort((a, b) => (a.sort_order - b.sort_order) || (a.id - b.id));
+        });
+
+        function renderNode(node, isRoot = false) {
+          const children = byParent.get(String(node.id)) || [];
+          const childHtml = children.length
+            ? `<ul>${children.map((child) => renderNode(child)).join('')}</ul>`
+            : '';
+          return `
+            <li>
+              <span class="mindmap-node ${isRoot ? 'root' : ''}">${node.name} #${node.id}</span>
+              ${childHtml}
+            </li>
+          `;
+        }
+
+        const roots = byParent.get('root') || [];
+        view.innerHTML = roots.length
+          ? `<ul>${roots.map((root) => renderNode(root, true)).join('')}</ul>`
+          : '<span class="small">当前树没有根节点</span>';
+      }
+
+      function refreshDashboardVisibility() {
+        if (state.teacher) {
+          loginSection.hidden = true;
+          dashboardSection.hidden = false;
+          teacherNameEl.textContent = state.teacher.username;
+        } else {
+          loginSection.hidden = false;
+          dashboardSection.hidden = true;
+          teacherNameEl.textContent = '';
+        }
+      }
+
+      async function checkTeacherSession() {
+        try {
+          state.teacher = await api('/api/teacher/me');
+          refreshDashboardVisibility();
+          await refreshAllData();
+        } catch (_err) {
+          state.teacher = null;
+          refreshDashboardVisibility();
+        }
+      }
+
+      async function refreshAllData() {
+        await Promise.all([loadStudents(), loadTrees()]);
+        await loadNodesForSelectedTree();
+        renderScoreSelectors();
+      }
+
+      async function loadStudents() {
+        state.students = await api('/api/students');
+        renderStudents();
+      }
+
+      function renderStudents() {
+        const tbody = document.getElementById('studentsTbody');
+        tbody.innerHTML = '';
+
+        state.students.forEach((student) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${student.id}</td>
+            <td>${student.username}</td>
+            <td>${student.name || ''}</td>
+            <td>${student.wechat_openid ? '已绑定' : '未绑定'}</td>
+            <td>
+              <div class="actions">
+                <button data-action="edit">编辑</button>
+                <button data-action="delete" class="danger">删除</button>
+              </div>
+            </td>
+          `;
+
+          tr.querySelector('[data-action="edit"]').onclick = async () => {
+            const username = prompt('新用户名（留空则不改）', student.username);
+            if (username === null) return;
+            const name = prompt('姓名（可留空）', student.name || '');
+            if (name === null) return;
+            const password = prompt('新密码（留空表示不修改）', '');
+            if (password === null) return;
+
+            await api(`/api/students/${student.id}`, {
+              method: 'PUT',
+              body: {
+                username: username.trim() || student.username,
+                name,
+                password,
+              },
+            });
+            showNotice('学生信息已更新');
+            await loadStudents();
+            renderScoreSelectors();
+          };
+
+          tr.querySelector('[data-action="delete"]').onclick = async () => {
+            if (!confirm(`确定删除学生 ${student.username} 吗？`)) return;
+            await api(`/api/students/${student.id}`, { method: 'DELETE' });
+            showNotice('学生已删除');
+            await loadStudents();
+            renderScoreSelectors();
+          };
+
+          tbody.appendChild(tr);
+        });
+      }
+
+      async function loadTrees() {
+        state.trees = await api('/api/trees');
+        renderTrees();
+
+        if (state.trees.length === 0) {
+          state.selectedTreeId = null;
+        } else if (!state.selectedTreeId || !state.trees.some((x) => x.id === state.selectedTreeId)) {
+          state.selectedTreeId = state.trees[0].id;
+        }
+
+        renderActiveTreeLabel();
+      }
+
+      function renderTrees() {
+        const tbody = document.getElementById('treesTbody');
+        tbody.innerHTML = '';
+
+        state.trees.forEach((tree) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${tree.id}</td>
+            <td>${tree.title}</td>
+            <td>${tree.knowledge_count}</td>
+            <td>
+              <div class="actions">
+                <button data-action="select">选择</button>
+                <button data-action="edit">编辑</button>
+                <button data-action="delete" class="danger">删除</button>
+              </div>
+            </td>
+          `;
+
+          tr.querySelector('[data-action="select"]').onclick = async () => {
+            state.selectedTreeId = tree.id;
+            renderActiveTreeLabel();
+            await loadNodesForSelectedTree();
+            renderScoreSelectors();
+          };
+
+          tr.querySelector('[data-action="edit"]').onclick = async () => {
+            const title = prompt('章节标题', tree.title);
+            if (title === null) return;
+            const chapterDesc = prompt('章节描述', tree.chapter_desc || '');
+            if (chapterDesc === null) return;
+            await api(`/api/trees/${tree.id}`, {
+              method: 'PUT',
+              body: { title, chapterDesc },
+            });
+            showNotice('学习树已更新');
+            await loadTrees();
+            renderScoreSelectors();
+          };
+
+          tr.querySelector('[data-action="delete"]').onclick = async () => {
+            if (!confirm(`确定删除学习树「${tree.title}」吗？这会删除其全部节点和评分。`)) return;
+            await api(`/api/trees/${tree.id}`, { method: 'DELETE' });
+            state.nodesByTree.delete(tree.id);
+            showNotice('学习树已删除');
+            await loadTrees();
+            await loadNodesForSelectedTree();
+            renderScoreSelectors();
+          };
+
+          tbody.appendChild(tr);
+        });
+      }
+
+      function renderActiveTreeLabel() {
+        const tree = state.trees.find((t) => t.id === state.selectedTreeId);
+        document.getElementById('activeTreeLabel').textContent = tree
+          ? `${tree.title} (ID: ${tree.id})`
+          : '未选择';
+      }
+
+      async function loadNodesForSelectedTree() {
+        const treeId = state.selectedTreeId;
+        const tbody = document.getElementById('nodesTbody');
+        const parentSelect = document.getElementById('nodeParentSelect');
+        const mindmap = document.getElementById('mindmapView');
+        tbody.innerHTML = '';
+        parentSelect.innerHTML = '';
+
+        if (!treeId) {
+          mindmap.innerHTML = '<span class="small">请先选择学习树</span>';
+          return;
+        }
+
+        const nodes = await api(`/api/trees/${treeId}/nodes`);
+        state.nodesByTree.set(treeId, nodes);
+        renderMindmap(nodes);
+
+        const ordered = toTreeOrdered(nodes);
+        const idNameMap = new Map(nodes.map((n) => [n.id, n.name]));
+
+        ordered.forEach(({ node, depth }) => {
+          const option = document.createElement('option');
+          option.value = String(node.id);
+          option.textContent = `${'  '.repeat(depth)}${depth > 0 ? '└ ' : ''}${node.name} (ID:${node.id})`;
+          parentSelect.appendChild(option);
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${node.id}</td>
+            <td><span class="node-level">${'&nbsp;&nbsp;'.repeat(depth)}${depth > 0 ? '└ ' : ''}</span>${node.name}</td>
+            <td>${node.parent_id || '-'}</td>
+            <td>${node.sort_order}</td>
+            <td>
+              <div class="actions">
+                <button data-action="edit">编辑</button>
+                ${node.parent_id === null ? '' : '<button data-action="delete" class="danger">删除</button>'}
+              </div>
+            </td>
+          `;
+
+          tr.querySelector('[data-action="edit"]').onclick = async () => {
+            const name = prompt('节点名称', node.name);
+            if (name === null) return;
+            const sortOrder = prompt('排序（整数）', String(node.sort_order));
+            if (sortOrder === null) return;
+
+            let parentPrompt = String(node.parent_id || '');
+            if (node.parent_id !== null) {
+              parentPrompt = prompt('父节点ID（不能为空）', String(node.parent_id));
+              if (parentPrompt === null) return;
+            }
+
+            await api(`/api/nodes/${node.id}`, {
+              method: 'PUT',
+              body: {
+                name,
+                sortOrder: Number(sortOrder),
+                parentId: node.parent_id === null ? null : Number(parentPrompt),
+              },
+            });
+            showNotice(`节点已更新：${name}`);
+            await loadNodesForSelectedTree();
+          };
+
+          const deleteBtn = tr.querySelector('[data-action="delete"]');
+          if (deleteBtn) {
+            deleteBtn.onclick = async () => {
+              if (!confirm(`确定删除节点「${node.name}」及其全部子节点吗？`)) return;
+              await api(`/api/nodes/${node.id}`, { method: 'DELETE' });
+              showNotice('节点已删除');
+              await loadNodesForSelectedTree();
+            };
+          }
+
+          tbody.appendChild(tr);
+        });
+
+        if (parentSelect.options.length > 0) {
+          parentSelect.value = parentSelect.options[0].value;
+        }
+      }
+
+      function renderScoreSelectors() {
+        const studentSelect = document.getElementById('scoreStudentSelect');
+        const treeSelect = document.getElementById('scoreTreeSelect');
+
+        studentSelect.innerHTML = '';
+        treeSelect.innerHTML = '';
+
+        state.students.forEach((student) => {
+          const opt = document.createElement('option');
+          opt.value = String(student.id);
+          opt.textContent = `${student.username}${student.name ? ` (${student.name})` : ''}`;
+          studentSelect.appendChild(opt);
+        });
+
+        state.trees.forEach((tree) => {
+          const opt = document.createElement('option');
+          opt.value = String(tree.id);
+          opt.textContent = `${tree.title} (ID:${tree.id})`;
+          treeSelect.appendChild(opt);
+        });
+
+        if (state.selectedTreeId) {
+          treeSelect.value = String(state.selectedTreeId);
+        }
+      }
+
+      function buildNodePathMap(nodes) {
+        const byId = new Map(nodes.map((n) => [n.id, n]));
+        const cache = new Map();
+        function getPath(id) {
+          if (cache.has(id)) {
+            return cache.get(id);
+          }
+          const node = byId.get(id);
+          if (!node) {
+            return '';
+          }
+          let path = node.name;
+          if (node.parent_id !== null) {
+            const parentPath = getPath(node.parent_id);
+            path = `${parentPath} / ${node.name}`;
+          }
+          cache.set(id, path);
+          return path;
+        }
+
+        const result = new Map();
+        nodes.forEach((node) => {
+          result.set(node.id, getPath(node.id));
+        });
+        return result;
+      }
+
+      function escapeHtml(text) {
+        return String(text || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function formatDateTime(value) {
+        if (!value) {
+          return '-';
+        }
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+          return value;
+        }
+        return date.toLocaleString('zh-CN', { hour12: false });
+      }
+
+      async function loadNodeScores(studentId, treeId) {
+        const rows = await api(`/api/scores?studentId=${studentId}&treeId=${treeId}`);
+        const tbody = document.getElementById('scoresTbody');
+        tbody.innerHTML = '';
+
+        const pathMap = buildNodePathMap(rows);
+
+        rows
+          .filter((row) => row.parent_id !== null)
+          .forEach((row) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${escapeHtml(pathMap.get(row.node_id) || row.name)}</td>
+              <td><input type="number" step="0.1" data-field="score" /></td>
+              <td><input data-field="comment" /></td>
+              <td>
+                <div class="score-work">
+                  <div class="small">已提交 ${row.submission_count || 0} 次</div>
+                  <textarea class="score-work-code" data-field="code-text" readonly></textarea>
+                  <div class="small">最新提交：${escapeHtml(formatDateTime(row.latest_submitted_at))}</div>
+                  <div data-field="code-image-wrap"></div>
+                </div>
+              </td>
+              <td>
+                <div class="actions">
+                  <button data-action="save" class="primary">保存</button>
+                  <button data-action="clear">清空</button>
+                </div>
+              </td>
+            `;
+
+            tr.querySelector('[data-field="score"]').value = row.score ?? '';
+            tr.querySelector('[data-field="comment"]').value = row.comment || '';
+            tr.querySelector('[data-field="code-text"]').value = row.code_text || '';
+
+            const imageWrap = tr.querySelector('[data-field="code-image-wrap"]');
+            if (row.code_image_url) {
+              const safeUrl = escapeHtml(row.code_image_url);
+              imageWrap.innerHTML = `
+                <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">查看最新图片</a>
+                <div><img class="score-work-image" src="${safeUrl}" alt="学生代码图片" /></div>
+              `;
+            } else {
+              imageWrap.innerHTML = '<span class="small">最新提交无图片</span>';
+            }
+
+            tr.querySelector('[data-action="save"]').onclick = async () => {
+              const scoreValue = tr.querySelector('[data-field="score"]').value;
+              const comment = tr.querySelector('[data-field="comment"]').value;
+              await api('/api/scores', {
+                method: 'PUT',
+                body: {
+                  studentId,
+                  nodeId: row.node_id,
+                  score: scoreValue === '' ? null : Number(scoreValue),
+                  comment,
+                },
+              });
+              showNotice(`节点评分已保存：${row.name}`);
+            };
+
+            tr.querySelector('[data-action="clear"]').onclick = async () => {
+              await api(`/api/scores?studentId=${studentId}&nodeId=${row.node_id}`, { method: 'DELETE' });
+              tr.querySelector('[data-field="score"]').value = '';
+              tr.querySelector('[data-field="comment"]').value = '';
+              showNotice(`节点评分已清空：${row.name}`);
+            };
+
+            tbody.appendChild(tr);
+          });
+      }
+
+      async function loadSubmissionScores(studentId, treeId) {
+        const [rows, treeNodes] = await Promise.all([
+          api(`/api/submissions?studentId=${studentId}&treeId=${treeId}`),
+          api(`/api/trees/${treeId}/nodes`),
+        ]);
+        const nodePathMap = buildNodePathMap(treeNodes);
+        const tbody = document.getElementById('submissionsTbody');
+        tbody.innerHTML = '';
+
+        if (!rows.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="8" class="small">该学生在本学习树暂无代码提交记录。</td>';
+          tbody.appendChild(tr);
+          return;
+        }
+
+        rows.forEach((row) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${row.id}</td>
+            <td>${escapeHtml(nodePathMap.get(row.node_id) || row.node_name)}</td>
+            <td>${escapeHtml(formatDateTime(row.submitted_at))}</td>
+            <td><textarea class="score-work-code" data-field="submission-code" readonly></textarea></td>
+            <td data-field="submission-image"></td>
+            <td><input type="number" step="0.1" data-field="submission-score" /></td>
+            <td><input data-field="submission-comment" /></td>
+            <td>
+              <div class="actions">
+                <button data-action="save-submission" class="primary">保存</button>
+              </div>
+            </td>
+          `;
+
+          tr.querySelector('[data-field="submission-code"]').value = row.code_text || '';
+          tr.querySelector('[data-field="submission-score"]').value = row.teacher_score ?? '';
+          tr.querySelector('[data-field="submission-comment"]').value = row.teacher_comment || '';
+
+          const imageCell = tr.querySelector('[data-field="submission-image"]');
+          if (row.code_image_url) {
+            const safeUrl = escapeHtml(row.code_image_url);
+            imageCell.innerHTML = `
+              <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">查看图片</a>
+              <div><img class="score-work-image" src="${safeUrl}" alt="提交图片" /></div>
+            `;
+          } else {
+            imageCell.innerHTML = '<span class="small">无</span>';
+          }
+
+          tr.querySelector('[data-action="save-submission"]').onclick = async () => {
+            const scoreValue = tr.querySelector('[data-field="submission-score"]').value;
+            const comment = tr.querySelector('[data-field="submission-comment"]').value;
+            await api(`/api/submissions/${row.id}/score`, {
+              method: 'PUT',
+              body: {
+                score: scoreValue === '' ? null : Number(scoreValue),
+                comment,
+              },
+            });
+            showNotice(`提交 #${row.id} 已批改`);
+          };
+
+          tbody.appendChild(tr);
+        });
+      }
+
+      async function loadScores() {
+        const studentId = Number(document.getElementById('scoreStudentSelect').value);
+        const treeId = Number(document.getElementById('scoreTreeSelect').value);
+
+        if (!studentId || !treeId) {
+          showNotice('请先选择学生和学习树', 'error');
+          return;
+        }
+
+        await Promise.all([
+          loadNodeScores(studentId, treeId),
+          loadSubmissionScores(studentId, treeId),
+        ]);
+      }
+
+      document.getElementById('loginForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const username = document.getElementById('loginUsername').value.trim();
+          const password = document.getElementById('loginPassword').value;
+          await api('/api/teacher/login', {
+            method: 'POST',
+            body: { username, password },
+          });
+          showNotice('登录成功');
+          await checkTeacherSession();
+        } catch (err) {
+          showNotice(err.message, 'error');
+        }
+      });
+
+      document.getElementById('logoutBtn').addEventListener('click', async () => {
+        try {
+          await api('/api/teacher/logout', { method: 'POST' });
+        } catch (_err) {
+        }
+        state.teacher = null;
+        refreshDashboardVisibility();
+        showNotice('已退出登录');
+      });
+
+      document.getElementById('refreshAllBtn').addEventListener('click', async () => {
+        try {
+          await refreshAllData();
+          showNotice('数据已刷新');
+        } catch (err) {
+          showNotice(err.message, 'error');
+        }
+      });
+
+      document.getElementById('studentForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const username = document.getElementById('studentUsername').value.trim();
+          const name = document.getElementById('studentName').value.trim();
+          const password = document.getElementById('studentPassword').value;
+          await api('/api/students', {
+            method: 'POST',
+            body: { username, name, password },
+          });
+
+          event.target.reset();
+          showNotice('学生已新增');
+          await loadStudents();
+          renderScoreSelectors();
+        } catch (err) {
+          showNotice(err.message, 'error');
+        }
+      });
+
+      document.getElementById('treeForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const title = document.getElementById('treeTitle').value.trim();
+          const rootName = document.getElementById('treeRootName').value.trim();
+          const chapterDesc = document.getElementById('treeDesc').value.trim();
+
+          const tree = await api('/api/trees', {
+            method: 'POST',
+            body: { title, rootName, chapterDesc },
+          });
+
+          state.selectedTreeId = tree.id;
+          event.target.reset();
+          showNotice('学习树已新增');
+          await loadTrees();
+          await loadNodesForSelectedTree();
+          renderScoreSelectors();
+        } catch (err) {
+          showNotice(err.message, 'error');
+        }
+      });
+
+      document.getElementById('nodeForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const treeId = state.selectedTreeId;
+          if (!treeId) {
+            showNotice('请先选择学习树', 'error');
+            return;
+          }
+
+          const parentId = Number(document.getElementById('nodeParentSelect').value);
+          const name = document.getElementById('nodeName').value.trim();
+          const sortOrder = Number(document.getElementById('nodeSort').value || 0);
+
+          await api(`/api/trees/${treeId}/nodes`, {
+            method: 'POST',
+            body: {
+              parentId,
+              name,
+              sortOrder,
+            },
+          });
+
+          event.target.reset();
+          document.getElementById('nodeSort').value = '0';
+          showNotice('节点已新增');
+          await loadNodesForSelectedTree();
+        } catch (err) {
+          showNotice(err.message, 'error');
+        }
+      });
+
+      document.getElementById('loadScoresBtn').addEventListener('click', async () => {
+        try {
+          await loadScores();
+        } catch (err) {
+          showNotice(err.message, 'error');
+        }
+      });
+
+      checkTeacherSession();
+    </script>
+  </body>
+</html>

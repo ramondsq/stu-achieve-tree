@@ -1,0 +1,186 @@
+<view class="container">
+  <view class="title">我的学习树</view>
+
+  <view class="card">
+    <view>当前学生：{{studentName}}</view>
+    <view wx:if="{{errorText}}" class="error" style="margin-top: 10rpx;">{{errorText}}</view>
+
+    <button class="btn ghost" loading="{{loading}}" bindtap="handleRefresh">
+      刷新
+    </button>
+    <button class="btn" bindtap="handleLogout">退出登录</button>
+  </view>
+
+  <view wx:if="{{!trees.length}}" class="card">
+    <view class="subtle">暂无学习树，请联系老师创建并打分。</view>
+  </view>
+
+  <block wx:for="{{trees}}" wx:key="id" wx:for-item="tree" wx:for-index="treeIndex">
+    <view class="card">
+      <view class="tree-header">
+        <view style="font-weight: 700;">{{tree.title}}</view>
+        <button
+          class="btn ghost mini-btn"
+          size="mini"
+          data-tree-index="{{treeIndex}}"
+          bindtap="handleToggleTree"
+        >
+          {{tree.treeExpanded ? '收起学习树' : '展开学习树'}}
+        </button>
+      </view>
+      <view class="subtle" style="margin-top: 8rpx;">{{tree.chapterDesc}}</view>
+      <view class="subtle" style="margin-top: 8rpx;">
+        已评分 {{tree.stats.scored}} / {{tree.stats.total}}，
+        总分 <text class="score-value {{tree.stats.totalScoreClass}}">{{tree.stats.totalScoreText}}</text>，
+        平均分 <text class="score-value {{tree.stats.averageScoreClass}}">{{tree.stats.averageScoreText}}</text>
+      </view>
+
+      <view wx:if="{{!tree.treeExpanded}}" class="subtle" style="margin-top: 12rpx;">
+        当前学习树已收起，点击“展开学习树”查看节点详情。
+      </view>
+
+      <view wx:if="{{tree.treeExpanded}}" style="margin-top: 14rpx;">
+        <block wx:for="{{tree.flatNodes}}" wx:key="id" wx:for-item="node" wx:for-index="nodeIndex">
+          <view class="node-row">
+            <view>
+              <text decode="true">{{node.indent}}</text>
+              <text>{{node.isKnowledge ? '└ ' : ''}}{{node.name}}</text>
+            </view>
+
+            <view wx:if="{{node.isKnowledge}}" class="subtle" style="margin-top: 6rpx;">
+              分数：<text class="score-value {{node.scoreClass}}">{{node.scoreText || '-'}}</text>
+              <text wx:if="{{node.comment}}">，评语：{{node.comment}}</text>
+            </view>
+
+            <view wx:if="{{node.isKnowledge}}" class="work-toggle-row">
+              <view class="subtle">
+                已提交 {{node.submissionCount}} 次，
+                最高分 <text class="score-value {{node.highestTeacherScoreClass}}">{{node.highestTeacherScoreText}}</text>，
+                平均分 <text class="score-value {{node.averageTeacherScoreClass}}">{{node.averageTeacherScoreText}}</text>
+              </view>
+              <button
+                class="btn ghost mini-btn"
+                size="mini"
+                data-tree-index="{{treeIndex}}"
+                data-node-index="{{nodeIndex}}"
+                bindtap="handleToggleWorkPanel"
+              >
+                {{node.editorExpanded ? '收起提交区' : '展开提交区'}}
+              </button>
+            </view>
+
+            <view wx:if="{{node.isKnowledge && node.editorExpanded}}" class="node-work">
+              <view class="subtle">提交草稿（可多次提交）</view>
+              <textarea
+                class="code-textarea"
+                placeholder="在这里填写代码（可多行）"
+                value="{{node.codeDraft}}"
+                data-tree-index="{{treeIndex}}"
+                data-node-index="{{nodeIndex}}"
+                bindinput="onCodeInput"
+              />
+
+              <view class="action-row">
+                <button
+                  class="btn ghost mini-btn"
+                  size="mini"
+                  loading="{{node.working}}"
+                  data-tree-index="{{treeIndex}}"
+                  data-node-index="{{nodeIndex}}"
+                  bindtap="handleSubmitSubmission"
+                >
+                  提交本次作业
+                </button>
+
+                <button
+                  class="btn mini-btn"
+                  size="mini"
+                  loading="{{node.working}}"
+                  data-tree-index="{{treeIndex}}"
+                  data-node-index="{{nodeIndex}}"
+                  bindtap="handlePickImage"
+                >
+                  拍照/选图
+                </button>
+
+                <button
+                  class="btn mini-btn"
+                  size="mini"
+                  data-tree-index="{{treeIndex}}"
+                  data-node-index="{{nodeIndex}}"
+                  bindtap="handleClearDraft"
+                >
+                  清空草稿
+                </button>
+              </view>
+
+              <view wx:if="{{node.draftImagePreviewUrl}}" class="image-box">
+                <view class="subtle">草稿图片（提交后才会保存）</view>
+                <image
+                  src="{{node.draftImagePreviewUrl}}"
+                  mode="widthFix"
+                  class="code-image"
+                  data-url="{{node.draftImagePreviewUrl}}"
+                  bindtap="handlePreviewImage"
+                />
+                <button
+                  class="btn mini-btn"
+                  size="mini"
+                  data-tree-index="{{treeIndex}}"
+                  data-node-index="{{nodeIndex}}"
+                  bindtap="handleRemoveDraftImage"
+                >
+                  删除草稿图片
+                </button>
+              </view>
+
+              <view wx:if="{{node.latestSubmittedAt}}" class="subtle" style="margin-top: 8rpx;">
+                最近提交时间：{{node.latestSubmittedAtText}}
+              </view>
+              <view wx:if="{{node.latestTeacherComment}}" class="subtle">
+                最近评语：{{node.latestTeacherComment}}
+              </view>
+              <view wx:if="{{node.latestImagePreviewUrl}}" class="image-box">
+                <view class="subtle">最近一次提交的图片</view>
+                <image
+                  src="{{node.latestImagePreviewUrl}}"
+                  mode="widthFix"
+                  class="code-image"
+                  data-url="{{node.latestImagePreviewUrl}}"
+                  bindtap="handlePreviewImage"
+                />
+              </view>
+
+              <view class="subtle" style="margin-top: 10rpx;">历史提交记录</view>
+              <view wx:if="{{!node.submissionHistory.length}}" class="subtle">
+                暂无历史提交记录
+              </view>
+              <block wx:for="{{node.submissionHistory}}" wx:key="id" wx:for-item="submission">
+                <view class="submission-item">
+                  <view class="subtle">提交 #{{submission.id}}，时间：{{submission.submittedAtText}}</view>
+                  <view class="subtle">
+                    本次评分：
+                    <text class="score-value {{submission.teacherScoreClass}}">{{submission.teacherScoreText}}</text>
+                  </view>
+                  <view wx:if="{{submission.teacherComment}}" class="subtle">
+                    评语：{{submission.teacherComment}}
+                  </view>
+                  <view wx:if="{{submission.codeText}}" class="submission-code">{{submission.codeText}}</view>
+                  <view wx:if="{{submission.imagePreviewUrl}}" class="image-box">
+                    <image
+                      src="{{submission.imagePreviewUrl}}"
+                      mode="widthFix"
+                      class="code-image"
+                      data-url="{{submission.imagePreviewUrl}}"
+                      bindtap="handlePreviewImage"
+                    />
+                  </view>
+                </view>
+              </block>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </block>
+</view>

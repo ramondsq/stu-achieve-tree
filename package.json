@@ -1,0 +1,19 @@
+{
+  "name": "learning-achievement-tree",
+  "version": "1.0.0",
+  "description": "少儿编程学习进度成就树系统（老师后台 + 学生端API）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.16.3"
+  },
+  "optionalDependencies": {
+    "sqlite3": "^5.1.7"
+  }
+}

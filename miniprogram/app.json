@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/trees/trees"
+  ],
+  "window": {
+    "navigationBarTitleText": "学习成就树",
+    "navigationBarBackgroundColor": "#2459d6",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f6f7fb",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
