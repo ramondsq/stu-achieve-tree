@@ -34,7 +34,7 @@
   <view class="card">
     <view class="subtle">微信登录 / 绑定</view>
     <view class="subtle" style="margin-top: 10rpx;">
-      1. 若已绑定账号，可直接点“微信登录”
+      1. 小程序会自动携带微信身份，已绑定账号可直接点“微信登录”
     </view>
     <view class="subtle">
       2. 首次使用，请先填账号密码后点“微信绑定并登录”

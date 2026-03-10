@@ -34,21 +34,11 @@ function formatDateTime(value) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
-function getApiBaseUrl() {
-  const app = getApp();
-  const raw = (app && app.globalData && app.globalData.apiBaseUrl) || '';
-  return raw.replace(/\/$/, '');
-}
-
 function toAbsoluteImageUrl(imageUrl) {
   if (!imageUrl) {
     return '';
   }
-  if (/^https?:\/\//.test(imageUrl)) {
-    return imageUrl;
-  }
-  const baseUrl = getApiBaseUrl();
-  return baseUrl ? `${baseUrl}${imageUrl}` : imageUrl;
+  return imageUrl;
 }
 
 function inferImageMimeType(filePath) {

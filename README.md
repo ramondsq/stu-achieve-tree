@@ -1,239 +1,165 @@
-# 少儿编程学习进度成就树系统（MVP）
+# 学习进度成就树系统
 
-这是一个可直接运行的基础版本，包含：
+当前项目已迁移为微信云开发 CloudBase 架构，不再依赖 Vercel、Supabase 或 Cloudflare Pages 作为正式部署方案。
 
-- 老师后台网页版（用户名/密码登录）
-- 学习树（章节）管理：增删改查
-- 知识点节点管理：增删改查（树结构，根节点 + 子节点）
-- 学生管理：增删改查
-- 评分管理：老师对每个学生的每个知识点录入评分/评语（增删改查）
-- 学生端接口：账号登录、查询自己的学习树和评分
-- 学生节点作业：每个知识点可多次提交代码（文本/图片）
-- 微信小程序授权登录接口：`wechat-bind` / `wechat-login`
-- 学生微信小程序基础代码（登录/绑定/学习树展示）
+## 当前部署架构
 
-## 1. 技术选型
+- 静态网站托管：老师后台和学生 Web 演示页部署到 CloudBase Static Hosting
+- 云函数：`api`
+- 小程序端：`wx.cloud.callFunction` 调用 `api`
+- Web 端：CloudBase Web SDK 匿名登录后调用 `api`
+- 文档型数据库：CloudBase NoSQL
+- 图片存储：CloudBase 云存储（私有桶，通过云函数生成临时访问地址）
 
-- 后端：Node.js + Express
-- 数据库：
-  - 本地开发：SQLite（本地文件 `data/app.db`）
-  - 生产部署：Supabase Postgres（通过 `DATABASE_URL`）
-- 对象存储（代码图片）：Supabase Storage
-- 前端：原生 HTML/CSS/JS（老师后台 + 学生 Web 演示页）
+当前环境：
 
-## 2. 启动方式
+- `EnvId`: `cloud1-7gu74gqqd2913ea4`
+- `Region`: `ap-shanghai`
+- 静态托管域名：`http://cloud1-7gu74gqqd2913ea4-1408652187.tcloudbaseapp.com/`
+- 云函数名：`api`
 
-```bash
-cp .env.example .env
-npm install
-npm start
-```
+## 目录说明
 
-说明：
-- 本地不填 `DATABASE_URL` 时，默认使用 SQLite。
-- 生产部署建议必须配置 `DATABASE_URL`（Supabase Postgres）。
+- `cloudfunctions/api/`
+  CloudBase 云函数主后端，承接老师后台、学生 Web、小程序的全部业务接口
+- `miniprogram/`
+  微信小程序代码，已切换到 `wx.cloud`
+- `public/`
+  静态托管页面
+- `server.js`
+  旧版 Express 服务，保留作历史参考，不再作为 CloudBase 正式部署入口
 
-启动后访问：
+## 数据集合
 
-- 老师后台：`http://localhost:3000/teacher.html`
-- 学生端 Web 演示：`http://localhost:3000/student.html`
+当前 CloudBase NoSQL 集合：
 
-## 3. 数据模型
+- `achv_teachers`
+- `achv_students`
+- `achv_learning_trees`
+- `achv_knowledge_nodes`
+- `achv_student_scores`
+- `achv_student_node_submissions`
 
-### teachers（老师）
-- `id`
-- `username`（唯一）
-- `password_hash`
+已创建的关键索引：
 
-### students（学生）
-- `id`
-- `username`（唯一）
-- `password_hash`
-- `name`
-- `wechat_openid`（唯一，可空）
+- `achv_teachers.username_unique`
+- `achv_students.username_unique`
+- `achv_students.wechat_openid_unique`
+- `achv_knowledge_nodes.tree_parent_sort`
+- `achv_student_scores.student_node_unique`
+- `achv_student_node_submissions.student_node_submitted_at`
 
-### learning_trees（学习树/章节）
-- `id`
-- `title`
-- `chapter_desc`
+权限策略：
 
-### knowledge_nodes（知识点节点）
-- `id`
-- `tree_id`
-- `parent_id`（根节点为 `NULL`）
-- `name`
-- `sort_order`
+- 上述所有集合：`ADMINONLY`
+- 云存储桶：`PRIVATE`
 
-说明：每棵树只允许一个根节点（通过唯一索引约束）。
+也就是说，页面和小程序不会直接访问数据库或存储，统一经过云函数。
 
-### student_scores（学生知识点评分）
-- `id`
-- `student_id`
-- `node_id`
-- `score`
-- `comment`
-- `updated_at`
+## 接口概览
 
-说明：`(student_id, node_id)` 唯一，使用 upsert 覆盖更新。
+云函数 `api` 兼容原有业务接口路径，主要包括：
 
-### student_node_submissions（学生节点代码提交记录）
-- `id`
-- `student_id`
-- `node_id`
-- `code_text`
-- `code_image_url`
-- `submitted_at`
-- `teacher_score`
-- `teacher_comment`
-- `scored_at`
+- 老师认证
+  - `POST /api/teacher/login`
+  - `POST /api/teacher/logout`
+  - `GET /api/teacher/me`
+- 学生管理
+  - `GET /api/students`
+  - `POST /api/students`
+  - `PUT /api/students/:id`
+  - `DELETE /api/students/:id`
+- 学习树管理
+  - `GET /api/trees`
+  - `POST /api/trees`
+  - `PUT /api/trees/:id`
+  - `DELETE /api/trees/:id`
+  - `GET /api/trees/:treeId/nodes`
+  - `POST /api/trees/:treeId/nodes`
+  - `PUT /api/nodes/:id`
+  - `DELETE /api/nodes/:id`
+- 评分与提交
+  - `GET /api/scores`
+  - `PUT /api/scores`
+  - `DELETE /api/scores`
+  - `GET /api/submissions`
+  - `PUT /api/submissions/:id/score`
+- 学生端
+  - `POST /api/student/login`
+  - `POST /api/student/logout`
+  - `GET /api/student/me`
+  - `GET /api/student/trees`
+  - `POST /api/student/node-submissions`
+  - `POST /api/student/wechat-bind`
+  - `POST /api/student/wechat-login`
 
-说明：同一学生在同一节点可提交多次；老师可按每次提交单独批改。
+## 鉴权说明
 
-## 4. 核心接口
+### Web 端
 
-### 老师认证
-- `POST /api/teacher/login`
-- `POST /api/teacher/logout`
-- `GET /api/teacher/me`
+- 静态页通过 `https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js` 初始化 CloudBase Web SDK
+- 使用匿名登录拿到 CloudBase 会话
+- 再通过 `callFunction({ name: 'api' })` 调业务云函数
+- 老师/学生业务登录仍然沿用项目自己的签名 token，保存在浏览器 `localStorage`
 
-### 学生管理（老师权限）
-- `GET /api/students`
-- `POST /api/students`
-- `PUT /api/students/:id`
-- `DELETE /api/students/:id`
+### 小程序端
 
-### 学习树与节点（老师权限）
-- `GET /api/trees`
-- `POST /api/trees`
-- `PUT /api/trees/:id`
-- `DELETE /api/trees/:id`
-- `GET /api/trees/:treeId/nodes`
-- `POST /api/trees/:treeId/nodes`
-- `PUT /api/nodes/:id`
-- `DELETE /api/nodes/:id`
+- `miniprogram/app.js` 已初始化：
+  - `env: cloud1-7gu74gqqd2913ea4`
+- 业务接口统一走：
+  - `wx.cloud.callFunction({ name: 'api' })`
+- 微信绑定/登录不再依赖 `wx.login + jscode2session`
+- 云函数内直接通过 `cloud.getWXContext().OPENID` 获取当前小程序用户身份
 
-### 评分（老师权限）
-- `GET /api/scores?studentId=1&treeId=1`
-- `PUT /api/scores`
-- `DELETE /api/scores?studentId=1&nodeId=2`
-- `GET /api/submissions?studentId=1&treeId=1`（查看该学生在该章节的每次提交）
-- `PUT /api/submissions/:id/score`（对某一次提交单独评分/评语）
+## 静态页配置
 
-说明：
-- `GET /api/scores` 返回每个节点“最新一次提交”与提交次数
-- 老师后台支持按“每次提交”独立批改
+`public/cloudbase-config.js` 已写入：
 
-### 学生端
-- `POST /api/student/login`
-- `POST /api/student/logout`
-- `GET /api/student/me`
-- `GET /api/student/trees`
-- `POST /api/student/node-submissions`（新增一次代码提交，可重复提交）
+- `envId`
+- `region`
+- `publishableKey`
 
-说明：
-- 图片支持 `PNG/JPEG/WEBP`，单张最大 `5MB`
-- 每次提交可仅文本、仅图片，或文本+图片
-- `GET /api/student/trees` 返回每个节点的历史提交记录、最高分与平均分（基于老师对每次提交的评分）
+如果后续更换环境，需要同步修改这个文件并重新上传静态资源。
 
-### 微信小程序授权
-- `POST /api/student/wechat-bind`
-  - 用途：先用账号密码验证学生身份，再绑定 `openid`
-- `POST /api/student/wechat-login`
-  - 用途：已绑定后，直接用 `code` 登录
+## 小程序说明
 
-## 5. 微信小程序接入说明
+已完成的切换：
 
-本仓库已包含小程序代码目录：`miniprogram/`
+- `miniprogram/app.js` 改为 `wx.cloud.init`
+- `miniprogram/utils/request.js` 改为 `wx.cloud.callFunction`
+- 登录页去掉 `wx.login` 依赖
+- `project.config.json` 已设置 `cloudfunctionRoot: "../cloudfunctions"`
 
-### 5.1 在微信开发者工具中运行
+建议在微信开发者工具中执行：
 
-1. 打开微信开发者工具，导入 `miniprogram/` 目录。
-2. 修改 `miniprogram/app.js` 里的 `globalData.apiBaseUrl` 为你的后端地址。
-3. 选择页面 `pages/login/login` 作为入口，先进行账号登录或微信绑定。
-4. 登录成功后会跳到 `pages/trees/trees` 展示学习树与评分。
+1. 导入 `miniprogram/`
+2. 确认 AppID 正确
+3. 右键 `cloudfunctions/api`，执行“云端安装依赖”
+4. 如遇权限或依赖问题，再用开发者工具手动上传一次云函数
 
-注意：
+## CloudBase 维护入口
 
-- 小程序正式环境必须使用公网 `HTTPS` 域名，不能用 `localhost`。
-- 开发调试可在开发者工具中临时关闭域名校验（仅开发阶段）。
+- 概览  
+  `https://tcb.cloud.tencent.com/dev?envId=cloud1-7gu74gqqd2913ea4#/overview`
+- 云函数  
+  `https://tcb.cloud.tencent.com/dev?envId=cloud1-7gu74gqqd2913ea4#/scf`
+- 文档型数据库  
+  `https://tcb.cloud.tencent.com/dev?envId=cloud1-7gu74gqqd2913ea4#/db/doc`
+- 云存储  
+  `https://tcb.cloud.tencent.com/dev?envId=cloud1-7gu74gqqd2913ea4#/storage`
+- 静态网站托管  
+  `https://tcb.cloud.tencent.com/dev?envId=cloud1-7gu74gqqd2913ea4#/static-hosting`
 
-### 5.2 小程序页面说明
+## 已完成的迁移项
 
-- `pages/login/login`：账号登录、微信登录、微信绑定并登录
-- `pages/trees/trees`：每棵学习树默认收起，点击展开后查看节点详情；章节显示总分与平均分；分数按区间着色（0-3 红、4-6 黄、7-10 绿）；每个节点展示历史提交记录，并显示所有提交记录的最高分与平均分
+- 将后端主逻辑迁移到 `cloudfunctions/api/index.js`
+- 将数据存储从 SQLite / Postgres / Supabase 改为 CloudBase NoSQL + 云存储
+- 将学生小程序请求链迁移到 `wx.cloud`
+- 将老师后台和学生 Web 演示迁移到 CloudBase Web SDK + 云函数
+- 将静态资源部署到 CloudBase Static Hosting
 
-服务端需要配置环境变量：
+## 当前边界
 
-- `WECHAT_APPID`
-- `WECHAT_SECRET`
-
-小程序端典型流程：
-
-1. 调用 `wx.login()` 获取 `code`
-2. 首次绑定：调用 `POST /api/student/wechat-bind`，传 `code + username + password`
-3. 后续登录：调用 `POST /api/student/wechat-login`，仅传 `code`
-4. 服务端返回 `token` 后，小程序请求其他学生接口时加：
-   - `Authorization: Bearer <token>`
-
-## 6. 当前版本边界（MVP）
-
-- 老师账号管理目前仅内置默认管理员账号（可后续补老师 CRUD）
-- 前端为基础管理台，便于快速验证业务闭环
-- 认证已改为无状态签名 token（依赖 `APP_SECRET`）
-
-## 7. 部署到 Vercel + Cloudflare Pages（生产）
-
-### 7.1 准备 Supabase
-
-1. 在 Supabase 创建项目。
-2. 获取数据库连接串（`DATABASE_URL`）。
-3. 新建 Storage Bucket：`code-images`（或自定义并配置 `SUPABASE_STORAGE_BUCKET`）。
-4. 建议将该 Bucket 配置为公开读取（便于老师/学生直接预览代码图片）。
-
-### 7.2 部署到 Vercel（后端主站）
-
-1. 将仓库导入 Vercel。
-2. Vercel 会读取仓库内 `vercel.json`，通过 `server.js` 启动 API + 后台页面。
-3. 在 Vercel 项目环境变量中配置（至少）：
-   - `APP_SECRET`
-   - `DATABASE_URL`
-   - `DB_SSL=true`
-   - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `SUPABASE_STORAGE_BUCKET`
-4. 首次启动会自动建表（不会自动创建老师账号，请手动插入老师用户）。
-
-可选（CLI）：
-```bash
-./scripts/deploy-vercel.sh
-```
-
-### 7.3 部署到 Cloudflare Pages（同域镜像）
-
-1. Cloudflare Pages 连接同一个仓库。
-2. Build 设置：
-   - Build command：留空
-   - Build output directory：`public`
-   - Functions directory：`functions`
-3. 在 Cloudflare Pages 环境变量中配置：
-   - `VERCEL_BACKEND_URL=https://你的-vercel-域名`
-4. `functions/api/[[path]].js` 会将 `/api/*` 请求代理到 Vercel 后端。
-
-可选（CLI）：
-```bash
-./scripts/deploy-cloudflare-pages.sh <你的-pages-项目名>
-```
-
-### 7.4 关键说明
-
-- 你将得到两个可访问域名：
-  - Vercel 域名（原生后端）
-  - Cloudflare Pages 域名（静态资源 + `/api` 代理）
-- 若要完全独立双活（两边各自直接连数据库执行后端逻辑），需要再做 Cloudflare Workers 原生适配，这版先用代理方案快速上线。
-
-## 8. 建议下一步迭代
-
-1. 把老师后台改成 Vue/React + 组件化树图（例如 mind map 渲染）
-2. 增加班级/课程维度（同一学生跨班级多套树）
-3. 增加评分历史（不是覆盖写入，而是保留版本）
-4. 上线前改成 JWT + 刷新机制 + HTTPS + 审计日志
+- 老师账号仍然是单管理员模式，没有老师 CRUD 页面
+- `server.js`、`vercel.json`、`scripts/deploy-vercel.sh` 等旧文件还在仓库中，但已不属于 CloudBase 正式链路
+- 如需彻底清理旧技术栈，可以继续删掉 Express / Supabase / Vercel 相关文件和依赖

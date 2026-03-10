@@ -26,34 +26,11 @@
         </form>
       </section>
 
-      <section class="panel" id="wechatPanel">
-        <h2>微信接口调试（小程序接入用）</h2>
-        <p class="small">需要服务端配置 <code>WECHAT_APPID</code> / <code>WECHAT_SECRET</code> 后可用。</p>
-
-        <form id="wechatLoginForm">
-          <label for="wechatCode">微信 code</label>
-          <input id="wechatCode" placeholder="wx.login() 返回的 code" required />
-          <div style="margin-top: 8px">
-            <button type="submit">微信登录（已绑定账号）</button>
-          </div>
-        </form>
-
-        <hr style="border: none; border-top: 1px solid #e7ebf4; margin: 14px 0" />
-
-        <form id="wechatBindForm">
-          <label for="bindCode">微信 code</label>
-          <input id="bindCode" required />
-
-          <label for="bindUsername">学生用户名</label>
-          <input id="bindUsername" required />
-
-          <label for="bindPassword">学生密码</label>
-          <input id="bindPassword" type="password" required />
-
-          <div style="margin-top: 8px">
-            <button type="submit">绑定并登录</button>
-          </div>
-        </form>
+      <section class="panel">
+        <h2>说明</h2>
+        <p class="small">
+          当前页面用于 Web 演示账号登录与学习树查看。微信身份绑定与快捷登录已迁移到微信小程序内，通过 CloudBase 云函数直接识别。
+        </p>
       </section>
 
       <section class="panel" id="studentDashboard" hidden>
@@ -69,6 +46,9 @@
       </section>
     </div>
 
+    <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
+    <script src="/cloudbase-config.js"></script>
+    <script src="/cloudbase-client.js"></script>
     <script>
       const TOKEN_KEY = 'student_access_token';
       let accessToken = localStorage.getItem(TOKEN_KEY) || '';
@@ -88,24 +68,12 @@
         if (accessToken) {
           headers.Authorization = `Bearer ${accessToken}`;
         }
-
-        const req = {
+        return window.CloudbaseWebClient.callApi(path, {
           method: options.method || 'GET',
-          credentials: 'include',
           headers,
-        };
-
-        if (options.body !== undefined) {
-          req.headers['Content-Type'] = 'application/json';
-          req.body = JSON.stringify(options.body);
-        }
-
-        const response = await fetch(path, req);
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(data.message || `请求失败 (${response.status})`);
-        }
-        return data;
+          body: options.body,
+          query: options.query,
+        });
       }
 
       function renderTreeNode(node) {
@@ -193,42 +161,6 @@
           });
           setStudentSession(payload);
           showNotice('登录成功');
-          await loadMyTrees();
-        } catch (err) {
-          showNotice(err.message, 'error');
-        }
-      });
-
-      document.getElementById('wechatLoginForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        try {
-          const code = document.getElementById('wechatCode').value.trim();
-          const payload = await studentApi('/api/student/wechat-login', {
-            method: 'POST',
-            body: { code },
-          });
-          setStudentSession(payload);
-          showNotice('微信登录成功');
-          await loadMyTrees();
-        } catch (err) {
-          showNotice(err.message, 'error');
-        }
-      });
-
-      document.getElementById('wechatBindForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        try {
-          const code = document.getElementById('bindCode').value.trim();
-          const username = document.getElementById('bindUsername').value.trim();
-          const password = document.getElementById('bindPassword').value;
-
-          const payload = await studentApi('/api/student/wechat-bind', {
-            method: 'POST',
-            body: { code, username, password },
-          });
-
-          setStudentSession(payload);
-          showNotice('微信绑定并登录成功');
           await loadMyTrees();
         } catch (err) {
           showNotice(err.message, 'error');

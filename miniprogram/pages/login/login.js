@@ -26,21 +26,6 @@ Page({
     this.setData({ errorText, successText });
   },
 
-  async doWxLoginCode() {
-    const loginResp = await new Promise((resolve, reject) => {
-      wx.login({
-        success: resolve,
-        fail: reject,
-      });
-    });
-
-    if (!loginResp.code) {
-      throw new Error('未获取到微信登录 code');
-    }
-
-    return loginResp.code;
-  },
-
   gotoTrees() {
     wx.redirectTo({
       url: '/pages/trees/trees',
@@ -84,11 +69,10 @@ Page({
     this.setMessage({});
 
     try {
-      const code = await this.doWxLoginCode();
       const payload = await request('/api/student/wechat-login', {
         method: 'POST',
         needAuth: false,
-        data: { code },
+        data: {},
       });
 
       setSession(payload);
@@ -114,12 +98,10 @@ Page({
     this.setMessage({});
 
     try {
-      const code = await this.doWxLoginCode();
       const payload = await request('/api/student/wechat-bind', {
         method: 'POST',
         needAuth: false,
         data: {
-          code,
           username,
           password,
         },

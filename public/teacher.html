@@ -206,7 +206,13 @@
       </section>
     </div>
 
+    <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
+    <script src="/cloudbase-config.js"></script>
+    <script src="/cloudbase-client.js"></script>
     <script>
+      const TEACHER_TOKEN_KEY = 'teacher_access_token';
+      let teacherToken = localStorage.getItem(TEACHER_TOKEN_KEY) || '';
+
       const state = {
         teacher: null,
         students: [],
@@ -229,23 +235,16 @@
       }
 
       async function api(path, options = {}) {
-        const req = {
+        const headers = { ...(options.headers || {}) };
+        if (teacherToken) {
+          headers.Authorization = `Bearer ${teacherToken}`;
+        }
+        return window.CloudbaseWebClient.callApi(path, {
           method: options.method || 'GET',
-          credentials: 'include',
-          headers: options.headers || {},
-        };
-
-        if (options.body !== undefined) {
-          req.headers['Content-Type'] = 'application/json';
-          req.body = JSON.stringify(options.body);
-        }
-
-        const response = await fetch(path, req);
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(data.message || `请求失败 (${response.status})`);
-        }
-        return data;
+          headers,
+          body: options.body,
+          query: options.query,
+        });
       }
 
       function toTreeOrdered(nodes) {
@@ -269,12 +268,12 @@
         function walk(node, depth) {
           ordered.push({ node, depth });
           node.children
-            .sort((a, b) => (a.sort_order - b.sort_order) || (a.id - b.id))
+            .sort((a, b) => (a.sort_order - b.sort_order) || String(a.id).localeCompare(String(b.id)))
             .forEach((child) => walk(child, depth + 1));
         }
 
         roots
-          .sort((a, b) => (a.sort_order - b.sort_order) || (a.id - b.id))
+          .sort((a, b) => (a.sort_order - b.sort_order) || String(a.id).localeCompare(String(b.id)))
           .forEach((root) => walk(root, 0));
 
         return ordered;
@@ -297,7 +296,7 @@
         });
 
         byParent.forEach((list) => {
-          list.sort((a, b) => (a.sort_order - b.sort_order) || (a.id - b.id));
+          list.sort((a, b) => (a.sort_order - b.sort_order) || String(a.id).localeCompare(String(b.id)));
         });
 
         function renderNode(node, isRoot = false) {
@@ -332,11 +331,19 @@
       }
 
       async function checkTeacherSession() {
+        if (!teacherToken) {
+          state.teacher = null;
+          refreshDashboardVisibility();
+          return;
+        }
+
         try {
           state.teacher = await api('/api/teacher/me');
           refreshDashboardVisibility();
           await refreshAllData();
         } catch (_err) {
+          teacherToken = '';
+          localStorage.removeItem(TEACHER_TOKEN_KEY);
           state.teacher = null;
           refreshDashboardVisibility();
         }
@@ -536,7 +543,7 @@
               body: {
                 name,
                 sortOrder: Number(sortOrder),
-                parentId: node.parent_id === null ? null : Number(parentPrompt),
+                parentId: node.parent_id === null ? null : String(parentPrompt).trim(),
               },
             });
             showNotice(`节点已更新：${name}`);
@@ -772,8 +779,8 @@
       }
 
       async function loadScores() {
-        const studentId = Number(document.getElementById('scoreStudentSelect').value);
-        const treeId = Number(document.getElementById('scoreTreeSelect').value);
+        const studentId = document.getElementById('scoreStudentSelect').value;
+        const treeId = document.getElementById('scoreTreeSelect').value;
 
         if (!studentId || !treeId) {
           showNotice('请先选择学生和学习树', 'error');
@@ -791,10 +798,13 @@
         try {
           const username = document.getElementById('loginUsername').value.trim();
           const password = document.getElementById('loginPassword').value;
-          await api('/api/teacher/login', {
+          const payload = await api('/api/teacher/login', {
             method: 'POST',
             body: { username, password },
           });
+          teacherToken = payload.token || '';
+          localStorage.setItem(TEACHER_TOKEN_KEY, teacherToken);
+          state.teacher = payload.teacher || null;
           showNotice('登录成功');
           await checkTeacherSession();
         } catch (err) {
@@ -807,6 +817,8 @@
           await api('/api/teacher/logout', { method: 'POST' });
         } catch (_err) {
         }
+        teacherToken = '';
+        localStorage.removeItem(TEACHER_TOKEN_KEY);
         state.teacher = null;
         refreshDashboardVisibility();
         showNotice('已退出登录');
@@ -873,7 +885,7 @@
             return;
           }
 
-          const parentId = Number(document.getElementById('nodeParentSelect').value);
+          const parentId = document.getElementById('nodeParentSelect').value;
           const name = document.getElementById('nodeName').value.trim();
           const sortOrder = Number(document.getElementById('nodeSort').value || 0);
 

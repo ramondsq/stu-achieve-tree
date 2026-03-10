@@ -1,19 +1,6 @@
 const { getToken } = require('./auth');
 
-function resolveUrl(path) {
-  if (!path) {
-    return '';
-  }
-  if (/^https?:\/\//.test(path)) {
-    return path;
-  }
-  const app = getApp();
-  const baseUrl = (app && app.globalData && app.globalData.apiBaseUrl) || '';
-  if (!baseUrl) {
-    throw new Error('请先在 app.js 中配置 globalData.apiBaseUrl');
-  }
-  return `${baseUrl}${path}`;
-}
+const FUNCTION_NAME = 'api';
 
 function request(path, options = {}) {
   const {
@@ -32,21 +19,25 @@ function request(path, options = {}) {
       }
     }
 
-    wx.request({
-      url: resolveUrl(path),
-      method,
-      data,
-      header,
+    wx.cloud.callFunction({
+      name: FUNCTION_NAME,
+      data: {
+        invokeMode: 'rpc',
+        path,
+        method,
+        headers: header,
+        data,
+      },
       success: (resp) => {
-        const payload = resp.data || {};
-        if (resp.statusCode >= 200 && resp.statusCode < 300) {
-          resolve(payload);
+        const payload = resp.result || {};
+        if (payload.ok) {
+          resolve(payload.data);
           return;
         }
-        reject(new Error(payload.message || `请求失败 (${resp.statusCode})`));
+        reject(new Error(payload.message || '请求失败'));
       },
       fail: (err) => {
-        reject(new Error(err.errMsg || '网络请求失败'));
+        reject(new Error(err.errMsg || '云函数调用失败'));
       },
     });
   });

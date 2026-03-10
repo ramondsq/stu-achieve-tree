@@ -30,6 +30,7 @@
     }
   },
   "compileType": "miniprogram",
+  "cloudfunctionRoot": "cloudfunctions/",
   "appid": "wx62d436813127cfed",
   "projectname": "learning-achievement-tree-mini",
   "condition": {},

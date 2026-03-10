@@ -1,0 +1,17 @@
+{
+  "envId": "cloud1-7gu74gqqd2913ea4",
+  "region": "ap-shanghai",
+  "cloudfunctionsRoot": "cloudfunctions",
+  "hostingRoot": "public",
+  "functions": [
+    "api"
+  ],
+  "collections": [
+    "achv_teachers",
+    "achv_students",
+    "achv_learning_trees",
+    "achv_knowledge_nodes",
+    "achv_student_scores",
+    "achv_student_node_submissions"
+  ]
+}
