@@ -460,7 +460,8 @@ Page({
       });
 
       const first = chosen.tempFiles && chosen.tempFiles[0];
-      const filePath = first && first.tempFilePath;
+      const filePath = (chosen.tempFilePaths && chosen.tempFilePaths[0])
+        || (first && (first.path || first.tempFilePath));
       if (!filePath) {
         throw new Error('未选择到图片');
       }
@@ -473,6 +474,7 @@ Page({
         draftImageMimeType: imageMimeType,
         draftImagePreviewUrl: filePath,
       });
+      this.setData({ errorText: '' });
     } catch (err) {
       const msg = String((err && (err.errMsg || err.message)) || '');
       if (msg.includes('cancel')) {
