@@ -1,1 +1,455 @@
 @import "../../app.wxss";
+
+
+.hero-card .tag:nth-child(1) {
+  background: rgba(18, 41, 78, 0.78);
+  color: #2459d6;
+}
+
+.hero-card .tag:nth-child(2) {
+  background: rgba(11, 45, 57, 0.78);
+  color: #0f766e;
+}
+
+.hero-card .tag:nth-child(3) {
+  background: rgba(10, 48, 58, 0.78);
+  color: #0f8c86;
+}
+
+.account-card .input {
+  border-color: rgba(100, 143, 207, 0.28);
+  background: rgba(7, 18, 35, 0.94);
+}
+
+.account-card .btn.primary {
+  background: linear-gradient(135deg, #2459d6, #3b82f6);
+}
+
+.wechat-card .muted-box {
+  border-color: rgba(67, 204, 184, 0.22);
+  background: rgba(9, 33, 42, 0.88);
+}
+
+.tip-card .card-title,
+.tip-card .subtle {
+  position: relative;
+  z-index: 1;
+}
+
+
+.tip-card {
+  background: linear-gradient(135deg, rgba(10, 28, 54, 0.98), rgba(8, 38, 49, 0.98));
+  border: 1rpx solid rgba(107, 150, 214, 0.16);
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.04), 0 18rpx 32rpx rgba(1, 8, 20, 0.32);
+}
+
+
+.tip-badge {
+  display: inline-flex;
+  margin-bottom: 12rpx;
+  padding: 10rpx 20rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #2666d8, #17a7a1);
+  color: #f5f9ff;
+  font-size: 22rpx;
+}
+
+.tip-btn {
+  margin-top: 16rpx;
+}
+
+
+.startup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(74, 131, 255, 0.22), rgba(4, 10, 20, 0) 34%),
+    linear-gradient(180deg, rgba(4, 10, 22, 0.92), rgba(7, 18, 35, 0.90));
+  box-sizing: border-box;
+  animation: startup-overlay-fade 360ms ease-out both;
+}
+
+.startup-overlay-backdrop,
+.startup-overlay-scanlines,
+.startup-overlay-stardust,
+.startup-overlay-particles {
+  position: absolute;
+  inset: 0;
+}
+
+.startup-overlay-backdrop {
+  background-image:
+    linear-gradient(rgba(132, 170, 255, 0.08) 1rpx, transparent 1rpx),
+    linear-gradient(90deg, rgba(132, 170, 255, 0.08) 1rpx, transparent 1rpx);
+  background-size: 44rpx 44rpx;
+  opacity: 0.8;
+}
+
+.startup-overlay-scanlines {
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(140, 182, 255, 0.08) 0rpx,
+    rgba(140, 182, 255, 0.08) 2rpx,
+    rgba(19, 72, 116, 0) 2rpx,
+    rgba(19, 72, 116, 0) 14rpx
+  );
+  mix-blend-mode: screen;
+  opacity: 0.35;
+  animation: startup-scanlines-shift 8s linear infinite;
+}
+
+.startup-overlay-stardust,
+.startup-overlay-particles {
+  pointer-events: none;
+}
+
+.startup-overlay-stardust {
+  animation: startup-stardust-rotate 20s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+.startup-star {
+  position: absolute;
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 999rpx;
+  background: rgba(173, 223, 255, 0.92);
+  box-shadow: 0 0 18rpx rgba(122, 198, 255, 0.45);
+  animation: startup-star-twinkle 3.6s ease-in-out infinite;
+}
+
+.star-a {
+  left: 24%;
+  top: 18%;
+  animation-delay: -0.8s;
+}
+
+.star-b {
+  right: 24%;
+  top: 20%;
+  width: 10rpx;
+  height: 10rpx;
+  animation-delay: -1.9s;
+}
+
+.star-c {
+  left: 18%;
+  top: 44%;
+  animation-delay: -2.7s;
+}
+
+.star-d {
+  right: 16%;
+  top: 48%;
+  width: 6rpx;
+  height: 6rpx;
+  animation-delay: -0.2s;
+}
+
+.star-e {
+  left: 26%;
+  bottom: 22%;
+  width: 11rpx;
+  height: 11rpx;
+  animation-delay: -1.3s;
+}
+
+.star-f {
+  right: 22%;
+  bottom: 24%;
+  animation-delay: -3.2s;
+}
+
+.star-g {
+  left: 48%;
+  top: 12%;
+  width: 6rpx;
+  height: 6rpx;
+  animation-delay: -2.1s;
+}
+
+.star-h {
+  right: 44%;
+  bottom: 12%;
+  width: 9rpx;
+  height: 9rpx;
+  animation-delay: -4.1s;
+}
+
+.startup-particle {
+  position: absolute;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 999rpx;
+  background: rgba(116, 255, 229, 0.78);
+  box-shadow: 0 0 18rpx rgba(116, 255, 229, 0.35);
+  animation: startup-particle-drift 6.4s ease-in-out infinite;
+}
+
+.particle-a {
+  left: 10%;
+  top: 18%;
+  animation-delay: -0.6s;
+}
+
+.particle-b {
+  right: 14%;
+  top: 22%;
+  width: 12rpx;
+  height: 12rpx;
+  animation-delay: -2.2s;
+}
+
+.particle-c {
+  left: 18%;
+  bottom: 20%;
+  width: 20rpx;
+  height: 20rpx;
+  animation-delay: -1.5s;
+}
+
+.particle-d {
+  right: 20%;
+  bottom: 18%;
+  animation-delay: -3.1s;
+}
+
+.particle-e {
+  left: 46%;
+  top: 11%;
+  width: 10rpx;
+  height: 10rpx;
+  animation-delay: -4.2s;
+}
+
+.particle-f {
+  right: 42%;
+  bottom: 10%;
+  width: 14rpx;
+  height: 14rpx;
+  animation-delay: -5.1s;
+}
+
+.startup-overlay-card {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 680rpx;
+  padding: 40rpx 32rpx 34rpx;
+  border-radius: 36rpx;
+  border: 1rpx solid rgba(116, 158, 245, 0.20);
+  background: linear-gradient(180deg, rgba(5, 16, 34, 0.98), rgba(8, 28, 54, 0.98));
+  box-shadow: 0 34rpx 72rpx rgba(1, 8, 20, 0.52);
+  animation: startup-card-rise 460ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+
+.startup-overlay-ring {
+  position: absolute;
+  border-radius: 999rpx;
+  border: 1rpx solid rgba(125, 176, 255, 0.2);
+  opacity: 0.7;
+}
+
+.startup-overlay-ring-a {
+  width: 260rpx;
+  height: 260rpx;
+  right: -92rpx;
+  top: -88rpx;
+  animation: startup-ring-pulse 5.4s ease-in-out infinite;
+}
+
+.startup-overlay-ring-b {
+  width: 180rpx;
+  height: 180rpx;
+  left: -42rpx;
+  bottom: 42rpx;
+  animation: startup-ring-pulse 6.8s ease-in-out infinite;
+  animation-delay: -1.6s;
+}
+
+.startup-overlay-orb {
+  width: 92rpx;
+  height: 92rpx;
+  margin: 0 auto 22rpx;
+  border-radius: 999rpx;
+  background: radial-gradient(circle at 30% 30%, #b5fff3 0%, #67d8ff 48%, rgba(70, 194, 214, 0.24) 100%);
+  box-shadow: 0 0 36rpx rgba(116, 255, 229, 0.35);
+  animation: startup-orb-pulse 2.8s ease-in-out infinite;
+}
+
+.startup-overlay-eyebrow,
+.startup-overlay-title,
+.startup-overlay-copy {
+  text-align: center;
+}
+
+.startup-overlay-eyebrow {
+  color: rgba(158, 196, 255, 0.82);
+}
+
+.startup-overlay-title {
+  color: #f5fbff;
+}
+
+
+.startup-overlay-badge {
+  margin: 0 auto;
+}
+
+.startup-overlay-copy {
+  margin-top: 18rpx;
+  color: rgba(220, 234, 255, 0.84);
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
+.startup-overlay-tags {
+  margin-top: 16rpx;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.startup-overlay-tag {
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid rgba(123, 176, 255, 0.18);
+  background: rgba(9, 24, 46, 0.72);
+  color: rgba(214, 233, 255, 0.82);
+  font-size: 22rpx;
+}
+
+
+.startup-overlay-actions {
+  margin-top: 24rpx;
+}
+
+@keyframes startup-overlay-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes startup-card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28rpx) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes startup-orb-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 36rpx rgba(116, 255, 229, 0.35);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 52rpx rgba(116, 255, 229, 0.46);
+  }
+}
+
+@keyframes startup-ring-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.85;
+  }
+}
+
+@keyframes startup-scanlines-shift {
+  from {
+    transform: translateY(-20rpx);
+  }
+  to {
+    transform: translateY(20rpx);
+  }
+}
+
+@keyframes startup-stardust-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes startup-star-twinkle {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.28;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+}
+
+@keyframes startup-particle-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.92);
+    opacity: 0.28;
+  }
+  50% {
+    transform: translate3d(0, -18rpx, 0) scale(1.18);
+    opacity: 0.92;
+  }
+}
+
+.account-card {
+  padding: 30rpx 28rpx 28rpx;
+}
+
+.account-card .form-item {
+  margin-bottom: 18rpx;
+}
+
+.account-card .input {
+  height: 92rpx;
+  line-height: 92rpx;
+  padding: 0 24rpx;
+  font-size: 26rpx;
+  border-radius: 22rpx;
+  border-color: rgba(100, 143, 207, 0.30);
+  background: rgba(7, 18, 35, 0.94);
+}
+
+.account-card .card-title {
+  margin-bottom: 10rpx;
+}
+
+.account-card .subtle {
+  margin-bottom: 18rpx;
+}
+
+.account-card .btn.primary {
+  min-height: 84rpx;
+  font-size: 24rpx;
+  background: linear-gradient(135deg, #2459d6, #3b82f6);
+}
+
+.tip-card {
+  margin-top: 2rpx;
+}

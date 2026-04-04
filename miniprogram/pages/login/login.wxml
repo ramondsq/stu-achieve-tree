@@ -1,8 +1,44 @@
-<view class="container">
-  <view class="title">学习成就树</view>
+<view wx:if="{{showStartupOverlay}}" class="startup-overlay">
+  <view class="startup-overlay-backdrop"></view>
+  <view class="startup-overlay-scanlines"></view>
+  <view class="startup-overlay-stardust">
+    <view class="startup-star star-a"></view>
+    <view class="startup-star star-b"></view>
+    <view class="startup-star star-c"></view>
+    <view class="startup-star star-d"></view>
+    <view class="startup-star star-e"></view>
+    <view class="startup-star star-f"></view>
+    <view class="startup-star star-g"></view>
+    <view class="startup-star star-h"></view>
+  </view>
+  <view class="startup-overlay-particles">
+    <view class="startup-particle particle-a"></view>
+    <view class="startup-particle particle-b"></view>
+    <view class="startup-particle particle-c"></view>
+    <view class="startup-particle particle-d"></view>
+    <view class="startup-particle particle-e"></view>
+    <view class="startup-particle particle-f"></view>
+  </view>
+  <view class="startup-overlay-card">
+    <view class="startup-overlay-ring startup-overlay-ring-a"></view>
+    <view class="startup-overlay-ring startup-overlay-ring-b"></view>
+    <view class="startup-overlay-orb"></view>
+    <view class="title startup-overlay-title">学习记录 · 成就大树</view>
+    <view wx:if="{{startupOverlayTip}}" class="tip-badge startup-overlay-badge">{{startupOverlayTip.badge}}</view>
+    <view wx:if="{{startupOverlayTip}}" class="startup-overlay-copy">{{startupOverlayTip.content}}</view>
+    <view class="btn-row startup-overlay-actions">
+      <button class="btn ghost" bindtap="handleChangeStartupOverlayTip">换一条</button>
+      <button class="btn primary" bindtap="handleCloseStartupOverlay">进入</button>
+    </view>
+  </view>
+</view>
 
-  <view class="card">
-    <view class="subtle">学生账号登录</view>
+<view class="container page-shell">
+
+  <view class="card card-accent card-accent-blue account-card">
+    <view class="section-tag section-tag-blue">账号方式</view>
+    <view class="card-title">学生账号登录</view>
+    <view class="subtle">输入账号密码后进入学习树。</view>
 
     <view class="form-item">
       <input
@@ -16,7 +52,7 @@
     <view class="form-item">
       <input
         class="input"
-        type="password"
+        password="{{true}}"
         placeholder="学生密码"
         value="{{password}}"
         bindinput="onPasswordInput"
@@ -31,20 +67,23 @@
     </button>
   </view>
 
-  <view class="card">
-    <view class="subtle">微信登录 / 绑定</view>
-    <view class="subtle" style="margin-top: 10rpx;">
-      1. 小程序会自动携带微信身份，已绑定账号可直接点“微信登录”
-    </view>
-    <view class="subtle">
-      2. 首次使用，请先填账号密码后点“微信绑定并登录”
-    </view>
+  <view class="card tip-card card-accent card-accent-slate">
+    <view class="section-tag section-tag-slate">今日提示</view>
+    <view class="tip-badge">{{startupTip.badge}}</view>
+    <view class="card-title">{{startupTip.title}}</view>
+    <view class="subtle">{{startupTip.content}}</view>
+    <button class="btn btn-tonal-slate tip-btn" bindtap="refreshStartupTip">换一条</button>
+  </view>
 
-    <button class="btn ghost" loading="{{loading}}" bindtap="handleWechatLogin">
+  <view class="card card-accent card-accent-green wechat-card">
+    <view class="section-tag section-tag-green">更多方式</view>
+    <view class="card-title">快捷进入</view>
+
+    <button class="btn btn-tonal-teal" loading="{{loading}}" bindtap="handleWechatLogin">
       微信登录（已绑定）
     </button>
 
-    <button class="btn warn" loading="{{loading}}" bindtap="handleWechatBind">
+    <button class="btn btn-tonal-amber" loading="{{loading}}" bindtap="handleWechatBind">
       微信绑定并登录
     </button>
   </view>

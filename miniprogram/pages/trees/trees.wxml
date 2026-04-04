@@ -1,179 +1,725 @@
-<view class="container">
-  <view class="title">我的学习树</view>
+<view wx:if="{{shareMode}}" class="share-page {{shareCard.themeClass}}">
+  <view class="share-grid"></view>
 
-  <view class="card">
-    <view>当前学生：{{studentName}}</view>
-    <view wx:if="{{errorText}}" class="error" style="margin-top: 10rpx;">{{errorText}}</view>
-
-    <button class="btn ghost" loading="{{loading}}" bindtap="handleRefresh">
-      刷新
-    </button>
-    <button class="btn" bindtap="handleLogout">退出登录</button>
+  <view wx:if="{{loading}}" class="share-status-card">
+    <view class="share-status-title">正在生成资料卡</view>
+    <view class="share-status-copy">请稍等。</view>
   </view>
 
-  <view wx:if="{{!trees.length}}" class="card">
-    <view class="subtle">暂无学习树，请联系老师创建并打分。</view>
+  <view wx:elif="{{errorText && !shareCard}}" class="share-status-card error">
+    <view class="share-status-title">加载失败</view>
+    <view class="share-status-copy">{{errorText}}</view>
+    <button class="share-btn ghost" bindtap="handleRefresh">重新加载</button>
+    <button class="share-btn ghost" bindtap="handleShareBack">返回学习树</button>
+  </view>
+
+  <view wx:elif="{{shareCard}}" class="share-shell">
+    <view class="share-card">
+      <view class="share-glow share-glow-a"></view>
+      <view class="share-glow share-glow-b"></view>
+
+      <view class="share-card-head">
+        <view class="share-card-main">
+          <view class="share-title">{{shareCard.nodeName}}</view>
+          <view wx:if="{{shareCard.shareSubtitle}}" class="share-subtitle">{{shareCard.shareSubtitle}}</view>
+        </view>
+        <view class="share-level-chip">Lv.{{shareCard.studentLevel}}</view>
+      </view>
+
+      <view class="share-meta-row">
+        <view class="share-meta">{{shareCard.studentDisplayName}} · {{shareCard.generatedAtText}}</view>
+      </view>
+
+      <view wx:if="{{shareCard.pathText}}" class="share-path">{{shareCard.pathText}}</view>
+
+      <view class="share-stat-grid">
+        <block wx:for="{{shareCard.metrics}}" wx:key="label" wx:for-item="metric">
+          <view class="share-stat-card">
+            <view class="share-stat-label">{{metric.label}}</view>
+            <view class="share-stat-value">{{metric.value}}</view>
+          </view>
+        </block>
+      </view>
+
+      <view wx:if="{{shareCard.tags.length}}" class="share-tag-row">
+        <block wx:for="{{shareCard.tags}}" wx:key="*this" wx:for-item="tag">
+          <view class="share-tag">{{tag}}</view>
+        </block>
+      </view>
+
+      <view wx:if="{{shareCard.isMonthSummary}}" class="share-section share-calendar-section">
+        <view class="share-calendar-topline">
+          <view class="share-calendar-copy">
+            <view class="share-section-title">月度热力图</view>
+            <view class="share-calendar-summary">{{shareCard.summaryCalendar.summaryText}}</view>
+          </view>
+          <view class="share-calendar-month-chip">{{shareCard.summaryCalendar.monthLabel}}</view>
+        </view>
+        <view class="share-calendar-stats">
+          <view class="share-calendar-metric">
+            <view class="share-calendar-metric-value">{{shareCard.summaryCalendar.activeDays}}</view>
+            <view class="share-calendar-metric-label">活跃天数</view>
+          </view>
+          <view class="share-calendar-metric">
+            <view class="share-calendar-metric-value">{{shareCard.summaryCalendar.submittedCount}}</view>
+            <view class="share-calendar-metric-label">提交次数</view>
+          </view>
+          <view class="share-calendar-metric">
+            <view class="share-calendar-metric-value">{{shareCard.summaryCalendar.reviewedDays}}</view>
+            <view class="share-calendar-metric-label">已评分天</view>
+          </view>
+        </view>
+        <view class="share-calendar-board">
+          <view class="share-calendar-weekdays">
+            <block wx:for="{{shareCard.summaryCalendar.weekdayLabels}}" wx:key="*this" wx:for-item="weekday">
+              <view class="share-calendar-weekday">{{weekday}}</view>
+            </block>
+          </view>
+          <view class="share-calendar-grid">
+            <block wx:for="{{shareCard.summaryCalendar.cells}}" wx:key="key" wx:for-item="cell">
+              <view class="share-calendar-cell {{cell.bandClass}} {{cell.placeholder ? 'share-calendar-cell-placeholder' : ''}} {{cell.isToday ? 'share-calendar-cell-today' : ''}}">
+                <text wx:if="{{!cell.placeholder}}" class="share-calendar-day">{{cell.dayLabel}}</text>
+              </view>
+            </block>
+          </view>
+        </view>
+        <view class="calendar-legend share-calendar-legend">
+          <block wx:for="{{shareCard.summaryCalendar.legendItems}}" wx:key="label" wx:for-item="legend">
+            <view class="calendar-legend-item">
+              <view class="calendar-legend-dot {{legend.bandClass}}"></view>
+              <text>{{legend.label}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+
+      <view wx:if="{{shareCard.coverImageUrl}}" class="share-cover-panel">
+        <image src="{{shareCard.coverImageUrl}}" mode="aspectFill" class="share-cover-image" />
+        <view class="share-cover-mask">
+          <view class="share-cover-title">{{shareCard.coverTitle}}</view>
+          <view class="share-cover-copy">共 {{shareCard.coverImageCount}} 张</view>
+        </view>
+      </view>
+
+      <view class="share-section">
+        <view class="share-section-head">
+          <view class="share-section-title">{{shareCard.codeSectionTitle}}</view>
+          <view class="share-section-meta">{{shareCard.codeLineCount}} 行</view>
+        </view>
+        <view class="share-code-block">{{shareCard.codeSnippet}}</view>
+      </view>
+
+      <view wx:if="{{shareCard.insightLines.length}}" class="share-section teacher-section">
+        <view class="share-section-head">
+          <view class="share-section-title">{{shareCard.insightTitle}}</view>
+          <view wx:if="{{shareCard.insightMeta}}" class="share-section-meta">{{shareCard.insightMeta}}</view>
+        </view>
+        <view class="share-insight-list">
+          <block wx:for="{{shareCard.insightLines}}" wx:key="*this" wx:for-item="line">
+            <view class="share-insight-item">{{line}}</view>
+          </block>
+        </view>
+      </view>
+
+      <view class="share-footer">
+        <view>{{shareCard.footerLeftText}}</view>
+        <view>{{shareCard.footerRightText}}</view>
+      </view>
+      <view wx:if="{{shareCard.encouragementText}}" class="share-encouragement">寄语：{{shareCard.encouragementText}}</view>
+    </view>
+
+    <view class="share-actions">
+      <button class="share-btn primary" loading="{{saving}}" bindtap="handleSaveSharePoster">保存资料卡</button>
+      <button class="share-btn ghost" open-type="share">转发给好友</button>
+      <button class="share-btn ghost" bindtap="handleTimelineTip">朋友圈分享</button>
+      <button class="share-btn ghost" bindtap="handleRefresh">重新加载</button>
+      <button class="share-btn ghost" bindtap="handleShareBack">返回学习树</button>
+    </view>
+
+    <view class="share-tip">朋友圈请用右上角“...”或直接分享保存图。</view>
+    <view wx:if="{{errorText}}" class="share-inline-error">{{errorText}}</view>
+  </view>
+</view>
+<view wx:else class="container page-shell">
+  <view id="module-hero" class="card hero-card card-accent card-accent-blue page-card page-card-hero focus-module {{activeModuleId === 'hero' ? 'focus-module-active' : ''}}">
+    <view class="title">我的学习树</view>
+    <view class="student-hero-panel">
+      <view class="student-hero-main">
+        <view class="student-hero-name">{{studentProfile.displayName}}</view>
+        <view class="student-hero-meta">{{studentProfile.username || studentName}}</view>
+      </view>
+      <view class="student-hero-side">
+        <view class="student-hero-chip student-hero-chip-blue">Lv.{{studentProfile.level}}</view>
+        <view class="student-hero-chip student-hero-chip-amber">积分 {{studentProfile.totalPoints}}</view>
+      </view>
+    </view>
+    <view wx:if="{{errorText}}" class="error">{{errorText}}</view>
+
+    <view class="btn-row top-action-stack">
+      <button class="btn btn-tonal-blue" loading="{{loading}}" bindtap="handleRefresh">
+        刷新
+      </button>
+      <button class="btn btn-tonal-teal" loading="{{summaryShareWorking}}" bindtap="handleCreateSummaryShareCard">
+        学习报告
+      </button>
+      <button class="btn btn-tonal-amber reward-action-btn" bindtap="handleOpenRewardCenter">{{rewardPrompt.buttonText}}</button>
+      <button class="btn btn-tonal-slate" bindtap="handleLogout">退出</button>
+    </view>
+
+    <view wx:if="{{rewardPrompt.hasClaimable}}" class="reward-prompt-bar" bindtap="handleOpenRewardCenter">
+      <view class="reward-prompt-dot"></view>
+      <view class="reward-prompt-text">{{rewardPrompt.hintText}}</view>
+      <view class="reward-prompt-link">去领取</view>
+    </view>
+
+    <view class="stats-grid summary-stats-grid">
+      <view class="stat-card stat-card-teal">
+        <view class="stat-label">开放任务</view>
+        <view class="stat-value">{{pageSummary.availableTasks}}</view>
+      </view>
+      <view class="stat-card stat-card-green">
+        <view class="stat-label">已计分</view>
+        <view class="stat-value">{{pageSummary.scoredTasks}}</view>
+      </view>
+      <view class="stat-card stat-card-amber">
+        <view class="stat-label">总分</view>
+        <view class="stat-value">{{pageSummary.currentScoreText}} / {{pageSummary.totalScoreText}}</view>
+      </view>
+    </view>
+
+    <view class="overview-progress-card">
+      <view class="overview-progress-head">
+        <view class="section-tag section-tag-blue">学习树进度</view>
+        <view class="overview-progress-percent">{{pageSummary.progressPercent}}%</view>
+      </view>
+      <view class="progress-rail progress-rail-blue">
+        <view class="progress-fill progress-fill-blue" style="width: {{pageSummary.progressPercent}}%;"></view>
+      </view>
+      <view class="subtle">{{pageSummary.overviewText}}</view>
+    </view>
+
+    <view class="overview-progress-card reward-progress-card">
+      <view class="overview-progress-head">
+        <view class="section-tag section-tag-amber">本周作业树</view>
+        <view class="overview-progress-percent reward-progress-percent">{{rewardTreeProgress.progressPercent}}%</view>
+      </view>
+      <view class="progress-rail reward-progress-rail">
+        <view class="progress-fill reward-progress-fill" style="width: {{rewardTreeProgress.progressPercent}}%;"></view>
+      </view>
+      <view class="subtle">{{rewardTreeProgress.summaryText}}</view>
+      <view class="reward-progress-foot">
+        <view class="reward-progress-stat">已达标 {{rewardTreeProgress.qualifiedCount}} / {{rewardTreeProgress.targetCount}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view id="module-knowledge-scene" class="card card-accent card-accent-blue page-card page-card-knowledge constellation-card focus-module {{activeModuleId === 'knowledge-scene' ? 'focus-module-active' : ''}}">
+    <view class="constellation-head">
+      <view class="constellation-head-main">
+        <view class="card-title">{{knowledgeScene.title}}</view>
+        <view class="subtle">{{knowledgeScene.summaryText}}</view>
+      </view>
+      <view class="constellation-badge">{{knowledgeScene.progressPercent}}%</view>
+    </view>
+    <button class="btn btn--ghost constellation-toggle" bindtap="handleToggleStarScenes">{{starScenesExpanded ? '收起星图' : '查看星图'}}</button>
+
+    <block wx:if="{{starScenesExpanded}}">
+      <view class="constellation-stage constellation-stage-knowledge" data-scene="knowledge" catchtouchstart="handleConstellationTouchStart" catchtouchmove="handleConstellationTouchMove" catchtouchend="handleConstellationTouchEnd" catchtouchcancel="handleConstellationTouchEnd">
+        <canvas id="knowledgeConstellationCanvas" type="2d" class="constellation-canvas"></canvas>
+        <view class="constellation-overlay">
+          <view class="constellation-overlay-copy">{{knowledgeScene.stageText}}</view>
+          <view class="constellation-overlay-hint">{{knowledgeScene.hintText}}</view>
+        </view>
+        <view wx:if="{{!knowledgeScene.totalNodeCount}}" class="constellation-empty">{{knowledgeScene.emptyText}}</view>
+      </view>
+
+      <view class="constellation-stats">
+        <view class="constellation-stat-card">
+          <view class="constellation-stat-label">发光节点</view>
+          <view class="constellation-stat-value">{{knowledgeScene.litNodeCount}} / {{knowledgeScene.totalNodeCount}}</view>
+        </view>
+        <view class="constellation-stat-card">
+          <view class="constellation-stat-label">总进度</view>
+          <view class="constellation-stat-value">{{knowledgeScene.progressPercent}}%</view>
+        </view>
+      </view>
+    </block>
+    <view wx:else class="panel-collapsed-note">点击后再加载动态星图，减少常驻资源消耗。</view>
+  </view>
+
+  <view id="module-reward-scene" class="card card-accent card-accent-teal page-card page-card-reward-scene constellation-card focus-module {{activeModuleId === 'reward-scene' ? 'focus-module-active' : ''}}">
+    <view class="constellation-head">
+      <view class="constellation-head-main">
+        <view class="card-title">{{rewardScene.title}}</view>
+        <view class="subtle">{{rewardScene.summaryText}}</view>
+      </view>
+      <view class="constellation-badge constellation-badge-reward">{{rewardScene.progressPercent}}%</view>
+    </view>
+    <button class="btn btn--ghost constellation-toggle" bindtap="handleToggleStarScenes">{{starScenesExpanded ? '收起星图' : '查看星图'}}</button>
+
+    <block wx:if="{{starScenesExpanded}}">
+      <view class="constellation-stage constellation-stage-reward" data-scene="reward" catchtouchstart="handleConstellationTouchStart" catchtouchmove="handleConstellationTouchMove" catchtouchend="handleConstellationTouchEnd" catchtouchcancel="handleConstellationTouchEnd">
+        <canvas id="rewardConstellationCanvas" type="2d" class="constellation-canvas"></canvas>
+        <view class="constellation-overlay">
+          <view class="constellation-overlay-copy">{{rewardScene.stageText}}</view>
+          <view class="constellation-overlay-hint">{{rewardScene.hintText}}</view>
+        </view>
+        <view wx:if="{{!rewardScene.totalNodeCount}}" class="constellation-empty">{{rewardScene.emptyText}}</view>
+      </view>
+
+      <view class="constellation-stats">
+        <view class="constellation-stat-card constellation-stat-card-reward">
+          <view class="constellation-stat-label">发光节点</view>
+          <view class="constellation-stat-value">{{rewardScene.litNodeCount}} / {{rewardScene.totalNodeCount}}</view>
+        </view>
+        <view class="constellation-stat-card constellation-stat-card-reward">
+          <view class="constellation-stat-label">总进度</view>
+          <view class="constellation-stat-value">{{rewardScene.progressPercent}}%</view>
+        </view>
+      </view>
+    </block>
+    <view wx:else class="panel-collapsed-note">点击后再加载悬赏星图，减少常驻资源消耗。</view>
+  </view>
+
+  <view id="module-profile" class="card card-accent card-accent-slate page-card page-card-profile focus-module {{activeModuleId === 'profile' ? 'focus-module-active' : ''}}">
+    <view class="profile-head">
+      <view>
+        <view class="card-title">个人资料</view>
+        <view class="subtle">提交、连胜和高分概况。</view>
+      </view>
+      <button class="btn btn--ghost profile-toggle" bindtap="handleToggleProfilePanel">{{profileExpanded ? '收起资料' : '查看资料'}}</button>
+    </view>
+
+    <block wx:if="{{profileExpanded}}">
+      <view class="profile-stats-grid">
+        <view class="profile-stat-card">
+          <view class="profile-stat-label">总提交</view>
+          <view class="profile-stat-value">{{studentProfileSummary.totalSubmissions}}</view>
+        </view>
+        <view class="profile-stat-card">
+          <view class="profile-stat-label">8分+</view>
+          <view class="profile-stat-value">{{studentProfileSummary.highScoreCount}}</view>
+        </view>
+        <view class="profile-stat-card">
+          <view class="profile-stat-label">最长连交</view>
+          <view class="profile-stat-value">{{studentProfileSummary.maxStreakDays}} 天</view>
+        </view>
+        <view class="profile-stat-card">
+          <view class="profile-stat-label">10分</view>
+          <view class="profile-stat-value">{{studentProfileSummary.perfectScoreCount}}</view>
+        </view>
+        <view class="profile-stat-card profile-stat-card-wide">
+          <view class="profile-stat-label">最后提交</view>
+          <view class="profile-stat-value profile-stat-value-long">{{studentProfileSummary.lastSubmittedAtText}}</view>
+        </view>
+      </view>
+    </block>
+    <view wx:else class="panel-collapsed-note">点击查看时再加载个人统计，减少首页常驻计算。</view>
+  </view>
+
+  <view id="module-activity" class="card activity-card card-accent card-accent-green page-card page-card-activity focus-module {{activeModuleId === 'activity' ? 'focus-module-active' : ''}}">
+    <view class="card-title">{{monthActivity.title}} 热力图</view>
+    <view class="subtle">{{monthActivity.summaryText}}</view>
+
+    <view class="activity-stat-list">
+      <view class="activity-stat-item">
+        <view class="activity-stat-label">活跃</view>
+        <view class="activity-stat-value">{{monthActivity.activeDays}} 天</view>
+      </view>
+      <view class="activity-stat-item">
+        <view class="activity-stat-label">已评分</view>
+        <view class="activity-stat-value">{{monthActivity.reviewedDays}} 天</view>
+      </view>
+      <view class="activity-stat-item">
+        <view class="activity-stat-label">提交</view>
+        <view class="activity-stat-value">{{monthActivity.submittedCount}} 次</view>
+      </view>
+    </view>
+
+    <view class="calendar-weekdays">
+      <block wx:for="{{monthActivity.weekdayLabels}}" wx:key="*this" wx:for-item="weekday">
+        <view class="calendar-weekday">{{weekday}}</view>
+      </block>
+    </view>
+
+    <view class="calendar-grid">
+      <block wx:for="{{monthActivity.cells}}" wx:key="key" wx:for-item="cell">
+        <view class="calendar-cell {{cell.bandClass}} {{cell.placeholder ? 'calendar-cell-placeholder' : ''}} {{cell.isToday ? 'calendar-cell-today' : ''}}">
+          <text wx:if="{{!cell.placeholder}}" class="calendar-cell-day">{{cell.dayLabel}}</text>
+        </view>
+      </block>
+    </view>
+
+    <view class="calendar-legend">
+      <block wx:for="{{monthActivity.legendItems}}" wx:key="label" wx:for-item="legend">
+        <view class="calendar-legend-item">
+          <view class="calendar-legend-dot {{legend.bandClass}}"></view>
+          <text>{{legend.label}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view wx:if="{{!trees.length}}" id="module-empty" class="card card-accent card-accent-slate focus-module {{activeModuleId === 'empty' ? 'focus-module-active' : ''}}">
+    <view class="card-title">暂无学习树</view>
+    <view class="subtle">请联系老师添加章节。</view>
   </view>
 
   <block wx:for="{{trees}}" wx:key="id" wx:for-item="tree" wx:for-index="treeIndex">
-    <view class="card">
+    <view id="module-{{tree.moduleId}}" class="card tree-card card-accent card-accent-teal page-card page-card-tree focus-module {{tree.themeClass}} {{tree.treeExpanded ? 'tree-expanded-card' : 'tree-collapsed-card'}} {{activeModuleId === tree.moduleId ? 'focus-module-active' : ''}}">
       <view class="tree-header">
-        <view style="font-weight: 700;">{{tree.title}}</view>
+        <view class="tree-header-main">
+          <view class="section-tag section-tag-teal tree-section-tag">{{tree.coverBadgeText}}</view>
+          <view class="card-title">{{tree.title}}</view>
+          <view class="subtle">{{tree.chapterDesc || '暂无描述'}}</view>
+        </view>
         <button
-          class="btn ghost mini-btn"
+          class="btn btn-tonal-teal mini-btn"
           size="mini"
           data-tree-index="{{treeIndex}}"
           bindtap="handleToggleTree"
         >
-          {{tree.treeExpanded ? '收起学习树' : '展开学习树'}}
+          {{tree.treeExpanded ? '返回本章' : '进入本章'}}
         </button>
       </view>
-      <view class="subtle" style="margin-top: 8rpx;">{{tree.chapterDesc}}</view>
-      <view class="subtle" style="margin-top: 8rpx;">
-        已评分 {{tree.stats.scored}} / {{tree.stats.total}}，
-        总分 <text class="score-value {{tree.stats.totalScoreClass}}">{{tree.stats.totalScoreText}}</text>，
-        平均分 <text class="score-value {{tree.stats.averageScoreClass}}">{{tree.stats.averageScoreText}}</text>
+      <view class="tree-cover-panel {{tree.coverThemeClass}} {{tree.treeExpanded ? 'tree-cover-open' : 'tree-cover-closed'}}">
+        <view class="tree-cover-top">
+          <view class="tree-cover-copy">{{tree.stats.statusText}}</view>
+          <view class="tree-cover-percent">{{tree.stats.progressPercent}}%</view>
+        </view>
+        <view class="progress-rail progress-rail-teal">
+          <view class="progress-fill progress-fill-teal" style="width: {{tree.stats.progressPercent}}%;"></view>
+        </view>
+        <view class="tree-cover-meta">{{tree.stats.highlightText}}</view>
+        <view class="tree-status-band">
+          <view class="tree-status-item">剩余 {{tree.stats.remainingTasks}} 项</view>
+          <view class="tree-status-item">{{tree.treeExpanded ? '本章进行中' : '点击进入'}}</view>
+        </view>
+        <view wx:if="{{tree.previewChips.length}}" class="tree-preview-row">
+          <block wx:for="{{tree.previewChips}}" wx:key="*this" wx:for-item="previewChip">
+            <view class="tree-preview-chip {{tree.previewChipClass}}">{{previewChip}}</view>
+          </block>
+        </view>
       </view>
 
-      <view wx:if="{{!tree.treeExpanded}}" class="subtle" style="margin-top: 12rpx;">
-        当前学习树已收起，点击“展开学习树”查看节点详情。
+      <view class="stats-grid tree-stats-grid">
+        <view class="stat-card stat-card-teal compact-stat">
+          <view class="stat-label">当前进度</view>
+          <view class="stat-value">{{tree.stats.scoredTasks}} / {{tree.stats.totalTasks}}</view>
+        </view>
+        <view class="stat-card stat-card-blue compact-stat">
+          <view class="stat-label">当前分数</view>
+          <view class="stat-value">
+            <text class="score-value {{tree.stats.currentScoreClass}}">{{tree.stats.currentScoreText}}</text>
+            / {{tree.stats.totalScoreText}}
+          </view>
+        </view>
       </view>
 
-      <view wx:if="{{tree.treeExpanded}}" style="margin-top: 14rpx;">
-        <block wx:for="{{tree.flatNodes}}" wx:key="id" wx:for-item="node" wx:for-index="nodeIndex">
-          <view class="node-row">
-            <view>
-              <text decode="true">{{node.indent}}</text>
-              <text>{{node.isKnowledge ? '└ ' : ''}}{{node.name}}</text>
-            </view>
+      <view wx:if="{{!tree.treeExpanded}}" class="muted-box tree-collapsed-box">
+        <view class="subtle">本章已收起</view>
+        <view wx:if="{{tree.previewChips.length}}" class="tree-collapsed-preview">
+          <view class="subtle">预览</view>
+          <view class="tree-preview-row">
+            <block wx:for="{{tree.previewChips}}" wx:key="*this" wx:for-item="previewChip">
+              <view class="tree-preview-chip {{tree.previewChipClass}}">{{previewChip}}</view>
+            </block>
+          </view>
+        </view>
+      </view>
 
-            <view wx:if="{{node.isKnowledge}}" class="subtle" style="margin-top: 6rpx;">
-              分数：<text class="score-value {{node.scoreClass}}">{{node.scoreText || '-'}}</text>
-              <text wx:if="{{node.comment}}">，评语：{{node.comment}}</text>
-            </view>
-
-            <view wx:if="{{node.isKnowledge}}" class="work-toggle-row">
-              <view class="subtle">
-                已提交 {{node.submissionCount}} 次，
-                最高分 <text class="score-value {{node.highestTeacherScoreClass}}">{{node.highestTeacherScoreText}}</text>，
-                平均分 <text class="score-value {{node.averageTeacherScoreClass}}">{{node.averageTeacherScoreText}}</text>
+      <view wx:if="{{tree.treeExpanded}}" class="tree-body">
+        <block wx:for="{{tree.flatNodes}}" wx:key="id" wx:for-item="node">
+          <view wx:if="{{node.isVisible}}" id="module-{{node.moduleId}}" class="node-row focus-module {{activeModuleId === node.moduleId ? 'focus-module-active' : ''}} {{node.isLeafTask ? 'leaf-row' : ''}} {{!node.unlocked ? 'locked-row' : ''}} {{node.nodeToneClass}}" style="{{node.nodeCardStyle}}">
+            <view class="node-header-row">
+              <view class="node-title-block">
+                <view wx:if="{{node.nodeTrailText}}" class="node-title-path">{{node.nodeTrailText}}</view>
+                <view class="node-title-name">{{node.name}}</view>
+                <view wx:if="{{node.nodeSummaryText}}" class="node-summary-line">{{node.nodeSummaryText}}</view>
               </view>
               <button
-                class="btn ghost mini-btn"
+                wx:if="{{node.hasChildren}}"
+                class="btn btn-tonal-slate mini-btn branch-btn"
                 size="mini"
                 data-tree-index="{{treeIndex}}"
-                data-node-index="{{nodeIndex}}"
-                bindtap="handleToggleWorkPanel"
+                data-node-id="{{node.id}}"
+                bindtap="handleToggleBranch"
               >
-                {{node.editorExpanded ? '收起提交区' : '展开提交区'}}
+                {{node.branchExpanded ? '收起分支' : '展开分支'}}
               </button>
             </view>
 
-            <view wx:if="{{node.isKnowledge && node.editorExpanded}}" class="node-work">
-              <view class="subtle">提交草稿（可多次提交）</view>
+            <view class="node-meta-row">
+              <view class="node-chip {{node.isLeafTask ? 'node-chip-blue' : 'node-chip-teal'}}">{{node.isLeafTask ? '任务点' : '分支'}}</view>
+              <view wx:if="{{node.hasChildren}}" class="node-chip node-chip-slate">{{node.branchExpanded ? '已展开' : '已收起'}}</view>
+              <view wx:if="{{node.unlocked}}" class="node-chip node-chip-green">{{node.isLeafTask ? '已开放' : '可浏览'}}</view>
+              <view wx:if="{{!node.unlocked}}" class="node-chip node-chip-amber">未解锁</view>
+            </view>
+
+            <view class="node-progress-box">
+              <view class="node-progress-head">
+                <view class="node-progress-score">{{node.nodeProgressScoreText}}</view>
+                <view class="node-progress-percent">{{node.nodeProgressPercent}}%</view>
+              </view>
+              <view class="progress-rail node-progress-rail">
+                <view class="progress-fill node-progress-fill" style="width: {{node.nodeProgressPercent}}%;"></view>
+              </view>
+              <view class="node-progress-copy">{{node.nodeProgressTaskText}}</view>
+            </view>
+
+            <view wx:if="{{node.hasChildren && !node.branchExpanded}}" class="subtle" style="margin-top: 8rpx;">
+              该分支已收起。
+            </view>
+
+            <view wx:if="{{node.canSubmit}}" class="work-toggle-row">
+              <view class="subtle">
+                已交 {{node.submissionCount}} 次 · 最高 <text class="score-value {{node.highestTeacherScoreClass}}">{{node.highestTeacherScoreText}}</text>
+                <text wx:if="{{node.latestTeacherComment}}"> · 评语：{{node.latestTeacherComment}}</text>
+              </view>
+              <button
+                class="btn btn-tonal-blue mini-btn"
+                size="mini"
+                data-tree-index="{{treeIndex}}"
+                data-node-id="{{node.id}}"
+                bindtap="handleToggleWorkPanel"
+              >
+                {{node.editorExpanded ? '收起作业' : '展开作业'}}
+              </button>
+            </view>
+
+            <view wx:if="{{!node.unlocked}}" class="subtle" style="margin-top: 8rpx;">
+              未解锁：{{node.lockedText}}
+            </view>
+
+            <view wx:if="{{node.canSubmit && node.editorExpanded}}" class="node-work node-work-card">
+              <view wx:if="{{node.hasProblemAttachment}}" class="problem-box problem-box-amber">
+                <view class="work-section-title work-section-amber">题目资料</view>
+                <view class="subtle">共 {{node.problemAttachments.length}} 份</view>
+                
+                <block wx:for="{{node.problemAttachments}}" wx:key="url" wx:for-item="attachment" wx:for-index="attachmentIndex">
+                  <view class="problem-item">
+                    <view class="subtle problem-item-title">{{attachment.displayName}}</view>
+                    <view class="subtle">{{attachment.kindLabel}}</view>
+                    <view wx:if="{{attachment.previewUrl}}" class="image-box">
+                      <image
+                        src="{{attachment.previewUrl}}"
+                        mode="widthFix"
+                        class="code-image"
+                        data-url="{{attachment.previewUrl}}"
+                        bindtap="handlePreviewImage"
+                      />
+                    </view>
+                    <view class="action-row">
+                      <button
+                        class="btn btn-tonal-blue mini-btn"
+                        size="mini"
+                        data-tree-index="{{treeIndex}}"
+                        data-node-id="{{node.id}}"
+                        data-attachment-index="{{attachmentIndex}}"
+                        bindtap="handleOpenProblemAttachment"
+                      >
+                        打开
+                      </button>
+                      <button
+                        class="btn btn-tonal-amber mini-btn"
+                        size="mini"
+                        data-tree-index="{{treeIndex}}"
+                        data-node-id="{{node.id}}"
+                        data-attachment-index="{{attachmentIndex}}"
+                        bindtap="handleSaveProblemAttachment"
+                      >
+                        保存
+                      </button>
+                    </view>
+                  </view>
+                </block>
+              </view>
+
+              <view class="work-section-title work-section-blue">作业草稿</view>
+              <view class="subtle">可反复提交，按最高分计。支持图片和常见文件，最多 9 份。</view>
               <textarea
                 class="code-textarea"
                 placeholder="在这里填写代码（可多行）"
                 value="{{node.codeDraft}}"
                 data-tree-index="{{treeIndex}}"
-                data-node-index="{{nodeIndex}}"
+                data-node-id="{{node.id}}"
                 bindinput="onCodeInput"
               />
 
               <view class="action-row">
                 <button
-                  class="btn ghost mini-btn"
+                  class="btn primary mini-btn submit-btn"
                   size="mini"
                   loading="{{node.working}}"
                   data-tree-index="{{treeIndex}}"
-                  data-node-index="{{nodeIndex}}"
+                  data-node-id="{{node.id}}"
                   bindtap="handleSubmitSubmission"
                 >
-                  提交本次作业
+                  提交作业
                 </button>
 
                 <button
-                  class="btn mini-btn"
+                  class="btn btn-tonal-teal mini-btn upload-btn"
                   size="mini"
                   loading="{{node.working}}"
                   data-tree-index="{{treeIndex}}"
-                  data-node-index="{{nodeIndex}}"
+                  data-node-id="{{node.id}}"
                   bindtap="handlePickImage"
                 >
-                  拍照/选图
+                  选图
                 </button>
 
                 <button
-                  class="btn mini-btn"
+                  class="btn btn-tonal-blue mini-btn upload-file-btn"
+                  size="mini"
+                  loading="{{node.working}}"
+                  data-tree-index="{{treeIndex}}"
+                  data-node-id="{{node.id}}"
+                  bindtap="handlePickFile"
+                >
+                  选文件
+                </button>
+
+                <button
+                  class="btn btn-tonal-amber mini-btn clear-btn"
                   size="mini"
                   data-tree-index="{{treeIndex}}"
-                  data-node-index="{{nodeIndex}}"
+                  data-node-id="{{node.id}}"
                   bindtap="handleClearDraft"
                 >
                   清空草稿
                 </button>
-              </view>
 
-              <view wx:if="{{node.draftImagePreviewUrl}}" class="image-box">
-                <view class="subtle">草稿图片（提交后才会保存）</view>
-                <image
-                  src="{{node.draftImagePreviewUrl}}"
-                  mode="widthFix"
-                  class="code-image"
-                  data-url="{{node.draftImagePreviewUrl}}"
-                  bindtap="handlePreviewImage"
-                />
                 <button
-                  class="btn mini-btn"
+                  class="btn btn-tonal-slate mini-btn share-btn-inline"
                   size="mini"
+                  loading="{{node.shareWorking}}"
                   data-tree-index="{{treeIndex}}"
-                  data-node-index="{{nodeIndex}}"
-                  bindtap="handleRemoveDraftImage"
+                  data-node-id="{{node.id}}"
+                  bindtap="handleCreateShareCard"
                 >
-                  删除草稿图片
+                  成果卡
                 </button>
               </view>
 
-              <view wx:if="{{node.latestSubmittedAt}}" class="subtle" style="margin-top: 8rpx;">
-                最近提交时间：{{node.latestSubmittedAtText}}
-              </view>
-              <view wx:if="{{node.latestTeacherComment}}" class="subtle">
-                最近评语：{{node.latestTeacherComment}}
-              </view>
-              <view wx:if="{{node.latestImagePreviewUrl}}" class="image-box">
-                <view class="subtle">最近一次提交的图片</view>
-                <image
-                  src="{{node.latestImagePreviewUrl}}"
-                  mode="widthFix"
-                  class="code-image"
-                  data-url="{{node.latestImagePreviewUrl}}"
-                  bindtap="handlePreviewImage"
-                />
+              <view wx:if="{{node.draftImageItems.length}}" class="image-box">
+                <view class="subtle">草稿图（{{node.draftImageItems.length}} 张）</view>
+                <view class="image-grid">
+                  <block wx:for="{{node.draftImageItems}}" wx:key="key" wx:for-item="draft">
+                    <view class="image-card">
+                      <image
+                        src="{{draft.previewUrl}}"
+                        mode="widthFix"
+                        class="code-image"
+                        data-url="{{draft.previewUrl}}"
+                        bindtap="handlePreviewImage"
+                      />
+                      <view class="subtle">{{draft.fileName}}</view>
+                      <button
+                        class="btn btn-tonal-amber mini-btn"
+                        size="mini"
+                        data-tree-index="{{treeIndex}}"
+                        data-node-id="{{node.id}}"
+                        data-image-key="{{draft.key}}"
+                        bindtap="handleRemoveDraftImage"
+                      >
+                        删除
+                      </button>
+                    </view>
+                  </block>
+                </view>
               </view>
 
-              <view class="subtle" style="margin-top: 10rpx;">历史提交记录</view>
-              <view wx:if="{{!node.submissionHistory.length}}" class="subtle">
-                暂无历史提交记录
+              <view wx:if="{{node.draftFileItems.length}}" class="file-box">
+                <view class="subtle">草稿附件（{{node.draftFileItems.length}} 份）</view>
+                <view class="file-list">
+                  <block wx:for="{{node.draftFileItems}}" wx:key="key" wx:for-item="draftFile">
+                    <view class="file-item">
+                      <view class="file-item-head">
+                        <view class="file-item-name">{{draftFile.fileName}}</view>
+                        <view class="file-kind-chip">{{draftFile.kindLabel}}</view>
+                      </view>
+                      <button
+                        class="btn btn-tonal-amber mini-btn"
+                        size="mini"
+                        data-tree-index="{{treeIndex}}"
+                        data-node-id="{{node.id}}"
+                        data-file-key="{{draftFile.key}}"
+                        bindtap="handleRemoveDraftFile"
+                      >
+                        删除
+                      </button>
+                    </view>
+                  </block>
+                </view>
               </view>
+
+              <view class="work-section-title work-section-slate">历史记录</view>
+              <view wx:if="{{!node.submissionHistory.length}}" class="subtle">暂无记录</view>
               <block wx:for="{{node.submissionHistory}}" wx:key="id" wx:for-item="submission">
                 <view class="submission-item">
-                  <view class="subtle">提交 #{{submission.id}}，时间：{{submission.submittedAtText}}</view>
+                  <view class="subtle">提交 #{{submission.id}} · {{submission.submittedAtText}}</view>
                   <view class="subtle">
-                    本次评分：
+                    评分：
                     <text class="score-value {{submission.teacherScoreClass}}">{{submission.teacherScoreText}}</text>
                   </view>
                   <view wx:if="{{submission.teacherComment}}" class="subtle">
                     评语：{{submission.teacherComment}}
                   </view>
                   <view wx:if="{{submission.codeText}}" class="submission-code">{{submission.codeText}}</view>
-                  <view wx:if="{{submission.imagePreviewUrl}}" class="image-box">
-                    <image
-                      src="{{submission.imagePreviewUrl}}"
-                      mode="widthFix"
-                      class="code-image"
-                      data-url="{{submission.imagePreviewUrl}}"
-                      bindtap="handlePreviewImage"
-                    />
+                  <view wx:if="{{submission.imageItems.length}}" class="image-box">
+                    <view class="image-grid">
+                      <block wx:for="{{submission.imageItems}}" wx:key="url" wx:for-item="submissionImage">
+                        <view class="image-card">
+                          <image
+                            src="{{submissionImage.previewUrl}}"
+                            mode="widthFix"
+                            class="code-image"
+                            data-url="{{submissionImage.previewUrl}}"
+                            bindtap="handlePreviewImage"
+                          />
+                          <view class="subtle">{{submissionImage.fileName}}</view>
+                        </view>
+                      </block>
+                    </view>
+                  </view>
+                  <view wx:if="{{submission.nonImageFileItems.length}}" class="file-box">
+                    <view class="file-list">
+                      <block wx:for="{{submission.nonImageFileItems}}" wx:key="url" wx:for-item="submissionFile" wx:for-index="fileIndex">
+                        <view class="file-item">
+                          <view class="file-item-head">
+                            <view class="file-item-name">{{submissionFile.fileName}}</view>
+                            <view class="file-kind-chip">{{submissionFile.kindLabel}}</view>
+                          </view>
+                          <view class="file-action-row">
+                            <button
+                              class="btn btn-tonal-blue mini-btn"
+                              size="mini"
+                              data-tree-index="{{treeIndex}}"
+                              data-node-id="{{node.id}}"
+                              data-file-source="history"
+                              data-submission-id="{{submission.id}}"
+                              data-file-index="{{fileIndex}}"
+                              bindtap="handleOpenSubmissionFile"
+                            >
+                              打开附件
+                            </button>
+                            <button
+                              class="btn btn-tonal-amber mini-btn"
+                              size="mini"
+                              data-tree-index="{{treeIndex}}"
+                              data-node-id="{{node.id}}"
+                              data-file-source="history"
+                              data-submission-id="{{submission.id}}"
+                              data-file-index="{{fileIndex}}"
+                              bindtap="handleSaveSubmissionFile"
+                            >
+                              保存附件
+                            </button>
+                          </view>
+                        </view>
+                      </block>
+                    </view>
                   </view>
                 </view>
               </block>
@@ -184,3 +730,19 @@
     </view>
   </block>
 </view>
+
+
+<view wx:if="{{submitOverlayVisible}}" class="submit-overlay">
+  <view class="submit-overlay-card">
+    <view class="submit-overlay-spinner"></view>
+    <view class="submit-overlay-title">提交中</view>
+    <view class="submit-overlay-copy">正在上传，请稍候。</view>
+    <view wx:if="{{activeLoadingTip}}" class="submit-tip-card">
+      <view class="submit-tip-badge">{{activeLoadingTip.badge}}</view>
+      <view class="submit-tip-title">{{activeLoadingTip.title}}</view>
+      <view class="submit-tip-content">{{activeLoadingTip.content}}</view>
+    </view>
+  </view>
+</view>
+
+<canvas canvas-id="sharePosterCanvas" class="share-poster-canvas"></canvas>

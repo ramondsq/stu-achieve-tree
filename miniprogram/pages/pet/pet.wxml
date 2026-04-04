@@ -1,0 +1,142 @@
+<view class="container page-shell pet-page">
+  <view class="card hero-card card-accent card-accent-blue">
+    <view class="title">宠物养成</view>
+    <view class="subtle">{{studentLabel}}</view>
+    <view wx:if="{{errorText}}" class="error">{{errorText}}</view>
+
+    <view class="pet-hero-grid">
+      <view class="pet-hero-main">
+        <view class="pet-hero-name">{{petCenter.pet.name}}</view>
+        <view class="pet-hero-subtle">{{petCenter.pet.species}} · {{petCenter.pet.visual_title}}</view>
+        <view class="pet-hero-copy">{{petCenter.pet.visual_description}}</view>
+        <view wx:if="{{petCenter.pet.species_selected}}" class="subtle">已选定宠物，不可更改</view>
+      </view>
+      <view class="pet-hero-points">
+        <view class="pet-points-value">{{petCenter.student.total_points}}</view>
+        <view class="subtle">当前积分</view>
+      </view>
+    </view>
+
+    <view class="btn-row reward-hero-actions">
+      <button class="btn btn-tonal-blue" loading="{{loading}}" bindtap="handleRefresh">刷新</button>
+      <button class="btn btn-tonal-slate" bindtap="handleBack">返回</button>
+    </view>
+  </view>
+
+  <view wx:if="{{!petCenter.pet.species_selected}}" class="card card-accent card-accent-blue">
+    <view class="section-tag section-tag-blue">首次选宠</view>
+    <view class="card-title">选择一只陪你成长的宠物</view>
+    <view class="subtle">每位学生只能选择一次，选定后不可更改。列表预览使用各宠物“开心”状态的 animated WebP。</view>
+    <block wx:for="{{petCenter.pet_selection.species_list}}" wx:key="key" wx:for-item="item">
+      <view class="pet-species-card">
+        <view class="pet-species-preview">
+          <image wx:if="{{item.preview_cover_url}}" class="pet-species-image" src="{{item.preview_cover_url}}" mode="aspectFit" webp="{{true}}"></image>
+          <view wx:else class="pet-species-placeholder">等待接入开心态动图</view>
+        </view>
+        <view class="pet-item-copy">
+          <view class="pet-item-title">{{item.title}}</view>
+          <view class="subtle">{{item.description}}</view>
+          <view class="pet-item-effect">开心态预览{{item.preview_frame_count ? ' · ' + item.preview_frame_count + '帧源文件' : ''}}</view>
+        </view>
+        <view class="pet-item-side">
+          <view class="pet-item-cost">{{item.default_pet_name}}</view>
+          <button class="btn btn-tonal-blue mini-btn" data-species-key="{{item.key}}" bindtap="handleSelectSpecies" loading="{{actionLoadingKey === 'select:' + item.key}}" disabled="{{actionLoadingKey}}">选择它</button>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view class="card card-accent card-accent-slate">
+    <view class="section-tag section-tag-blue">形象预留</view>
+    <view class="card-title">{{petCenter.pet.species_selected ? petCenter.pet.visual_title : '等待选宠'}}</view>
+    <view class="subtle">{{petCenter.pet.species_selected ? ('状态评分 ' + petCenter.pet.visual_score + ' · ' + petCenter.pet.visual_description) : '选定宠物后，这里会显示当前状态的 animated WebP。'}}</view>
+    <view class="pet-stage-shell">
+      <image wx:if="{{petCenter.pet.active_animation_url}}" class="pet-stage-image" src="{{petCenter.pet.active_animation_url}}" mode="aspectFit" webp="{{true}}"></image>
+      <image wx:elif="{{petCenter.pet.current_frame_url}}" class="pet-stage-image" src="{{petCenter.pet.current_frame_url}}" mode="aspectFit"></image>
+      <view wx:else class="pet-stage-placeholder">{{petCenter.pet.placeholder_text}}</view>
+    </view>
+    <view class="pet-visual-chip-row">
+      <view wx:for="{{petCenter.pet.visual_options}}" wx:key="key" wx:for-item="item" class="pet-visual-chip {{item.active ? 'is-active' : ''}} {{item.has_animation ? 'has-frames' : (item.has_frames ? 'has-frames' : '')}}">{{item.title}}<text wx:if="{{item.has_animation}}"> 动图</text><text wx:elif="{{item.frame_count}}"> {{item.frame_count}}帧</text></view>
+    </view>
+    <view class="subtle">{{petCenter.pet.species_selected ? '当前宠物会按三维变化自动切换到对应状态动图。' : '先完成首次选宠，再继续养成和播放动画。'}}</view>
+  </view>
+
+  <view class="card card-accent card-accent-teal">
+    <view class="section-tag section-tag-teal">三维状态</view>
+    <view class="pet-stat-list">
+      <view class="pet-stat-item">
+        <view class="pet-stat-head"><text>饱食度</text><text>{{petCenter.pet.hunger}}%</text></view>
+        <view class="reward-progress-track"><view class="reward-progress-fill reward-progress-fill-teal" style="width: {{petCenter.pet.hunger}}%;"></view></view>
+      </view>
+      <view class="pet-stat-item">
+        <view class="pet-stat-head"><text>健康值</text><text>{{petCenter.pet.health}}%</text></view>
+        <view class="reward-progress-track"><view class="reward-progress-fill reward-progress-fill-blue" style="width: {{petCenter.pet.health}}%;"></view></view>
+      </view>
+      <view class="pet-stat-item">
+        <view class="pet-stat-head"><text>心情值</text><text>{{petCenter.pet.mood}}%</text></view>
+        <view class="reward-progress-track"><view class="reward-progress-fill reward-progress-fill-green" style="width: {{petCenter.pet.mood}}%;"></view></view>
+      </view>
+    </view>
+    <view class="reward-metric-row">
+      <view class="reward-metric">{{petCenter.pet.illness.status_text}}</view>
+      <view class="reward-metric">本周 {{petCenter.pet.illness.week_label}}</view>
+      <view class="reward-metric">过量喂食 {{petCenter.pet.overfed_count}} 次</view>
+    </view>
+  </view>
+
+  <view class="card card-accent card-accent-blue">
+    <view class="section-tag section-tag-blue">商店</view>
+    <view class="card-title">购买道具</view>
+    <view class="subtle">积分可购买食物、药品、玩具，先搭通基础循环。</view>
+    <block wx:for="{{petCenter.shop.items}}" wx:key="key" wx:for-item="item">
+      <view class="pet-item-row">
+        <view class="pet-item-copy">
+          <view class="pet-item-title">{{item.title}}</view>
+          <view class="subtle">{{item.description}}</view>
+          <view class="pet-item-effect">{{item.effect_text}}</view>
+        </view>
+        <view class="pet-item-side">
+          <view class="pet-item-cost">{{item.cost}} 积分</view>
+          <view class="subtle">拥有 {{item.owned_count}}</view>
+          <button class="btn {{item.affordable ? 'btn-tonal-blue' : 'btn-tonal-slate'}} mini-btn" data-item-key="{{item.key}}" bindtap="handlePurchase" loading="{{actionLoadingKey === 'buy:' + item.key}}" disabled="{{!item.affordable || actionLoadingKey}}">购买</button>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view class="card card-accent card-accent-green">
+    <view class="section-tag section-tag-green">背包</view>
+    <view class="card-title">使用道具</view>
+    <view class="subtle">已拥有 {{petCenter.bag.total_count}} 件</view>
+    <block wx:if="{{petCenter.bag.items.length}}">
+      <block wx:for="{{petCenter.bag.items}}" wx:key="key" wx:for-item="item">
+        <view class="pet-item-row">
+          <view class="pet-item-copy">
+            <view class="pet-item-title">{{item.title}}</view>
+            <view class="subtle">{{item.effect_text}}</view>
+          </view>
+          <view class="pet-item-side">
+            <view class="pet-item-cost">库存 {{item.owned_count}}</view>
+            <button class="btn btn-tonal-green mini-btn" data-item-key="{{item.key}}" bindtap="handleUse" loading="{{actionLoadingKey === 'use:' + item.key}}" disabled="{{actionLoadingKey}}">使用</button>
+          </view>
+        </view>
+      </block>
+    </block>
+    <view wx:else class="empty-state">
+      <view class="card-title">背包还是空的</view>
+      <view class="subtle">先去上面的商店买一点食物、药品或玩具。</view>
+    </view>
+  </view>
+
+  <view class="card card-accent card-accent-amber">
+    <view class="section-tag section-tag-amber">规则</view>
+    <view class="reward-metric-row">
+      <view class="reward-metric">每日饱食 -{{petCenter.rules.daily_hunger_decay_percent}}%</view>
+      <view class="reward-metric">每周生病 {{petCenter.rules.weekly_illness_probability_percent}}%</view>
+      <view class="reward-metric">心情衰减 {{petCenter.rules.mood_decay_factor_percent}}%</view>
+      <view class="reward-metric">吃太多阈值 {{petCenter.rules.overfed_threshold}}%</view>
+      <view class="reward-metric">过量扣健康 {{petCenter.rules.overfed_health_penalty}}%</view>
+      <view class="reward-metric">生病日掉健康 {{petCenter.rules.illness_health_decay_per_day}}%</view>
+    </view>
+  </view>
+</view>

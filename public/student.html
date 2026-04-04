@@ -4,42 +4,92 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>学生端 - 学习进度成就树</title>
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div class="container">
-      <h1>学生端 - 学习进度成就树（Web 演示）</h1>
-      <div id="notice"></div>
+    <div class="container page-shell">
+      <header class="page-hero">
+        <div>
+          <div class="eyebrow">学习进度成就树</div>
+          <h1>学生端</h1>
+          <p class="hero-copy">
+            支持账号登录、章节浏览、题目查看、作业提交、学习报告和积分领取。
+          </p>
+        </div>
+        <div class="hero-actions">
+          <a class="ghost-link" href="./teacher.html">进入老师后台</a>
+          <span class="entity-pill readonly">CloudBase 同步数据</span>
+        </div>
+      </header>
 
-      <section class="panel" id="studentLoginPanel">
-        <h2>账号登录</h2>
-        <form id="studentLoginForm">
-          <label for="studentUsername">用户名</label>
-          <input id="studentUsername" required />
+      <div id="notice" class="notice-slot" aria-live="polite"></div>
 
-          <label for="studentPassword">密码</label>
-          <input id="studentPassword" type="password" required />
-
-          <div style="margin-top: 10px">
-            <button class="primary" type="submit">登录</button>
+      <div class="dashboard-layout dashboard-layout--student">
+        <section class="panel auth-panel" id="studentLoginPanel">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">账号登录</h2>
+              <p class="section-copy">登录后即可查看进度和批改记录。</p>
+            </div>
           </div>
-        </form>
-      </section>
+          <form id="studentLoginForm">
+            <label for="studentUsername">用户名</label>
+            <input id="studentUsername" required />
 
-      <section class="panel">
-        <h2>说明</h2>
-        <p class="small">
-          当前页面用于 Web 演示账号登录与学习树查看。微信身份绑定与快捷登录已迁移到微信小程序内，通过 CloudBase 云函数直接识别。
-        </p>
-      </section>
+            <label for="studentPassword">密码</label>
+            <input id="studentPassword" type="password" required />
 
-      <section class="panel" id="studentDashboard" hidden>
-        <div class="toolbar">
-          <div>当前学生：<strong id="studentName"></strong></div>
-          <div class="actions">
-            <button id="reloadTreesBtn">刷新学习树</button>
-            <button id="studentLogoutBtn" class="danger">退出</button>
+            <div class="form-actions">
+              <button class="primary" type="submit">登录</button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <section id="studentDashboard" hidden>
+        <div class="panel">
+          <div class="toolbar">
+            <div>学生：<strong id="studentName"></strong></div>
+            <div class="actions">
+              <button id="reloadTreesBtn" type="button">刷新</button>
+              <button id="studentReportBtn" type="button">学习报告</button>
+              <button id="studentRewardsBtn" type="button">领取积分</button>
+              <button id="studentLogoutBtn" type="button" class="danger">退出</button>
+            </div>
           </div>
+          <div id="studentSummaryCards" class="stats-row"></div>
+          <div id="studentStatusBanner" class="student-inline-banner" hidden></div>
+        </div>
+
+        <div class="workspace-grid workspace-grid--wide">
+          <section class="panel">
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">积分中心</h2>
+                <p class="section-copy">查看可领积分和达成进度。</p>
+              </div>
+            </div>
+            <div id="studentRewardCenterPanel" class="feature-list">
+              <div class="small">登录后自动加载。</div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">学习报告</h2>
+                <p class="section-copy">生成本周、本月或最近 10 次报告。</p>
+              </div>
+            </div>
+            <div class="actions student-tool-actions" style="margin-bottom: 14px;">
+              <button id="reportWeekBtn" type="button">本周</button>
+              <button id="reportMonthBtn" type="button">本月</button>
+              <button id="reportRecentBtn" type="button">最近10次</button>
+            </div>
+            <div id="studentReportPanel" class="feature-list">
+              <div class="small">点击上方按钮生成报告。</div>
+            </div>
+          </section>
         </div>
 
         <div id="treesContainer"></div>
@@ -47,20 +97,72 @@
     </div>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="/cloudbase-config.js"></script>
-    <script src="/cloudbase-client.js"></script>
+    <script src="./cloudbase-config.js"></script>
+    <script src="./cloudbase-client.js"></script>
     <script>
       const TOKEN_KEY = 'student_access_token';
       let accessToken = localStorage.getItem(TOKEN_KEY) || '';
       let currentStudent = null;
+      let currentTrees = [];
+      let currentRewardCenter = null;
+      let latestReportCard = null;
+      let noticeTimer = 0;
+      let branchExpansionState = new Map();
+      let treeOpenState = new Map();
 
       function showNotice(message, type = 'success') {
         const notice = document.getElementById('notice');
+        window.clearTimeout(noticeTimer);
         if (!message) {
           notice.innerHTML = '';
           return;
         }
-        notice.innerHTML = `<div class="notice ${type === 'error' ? 'error' : 'success'}">${message}</div>`;
+
+        const item = document.createElement('div');
+        item.className = `notice ${type === 'error' ? 'error' : 'success'}`;
+
+        const title = document.createElement('div');
+        title.className = 'notice-title';
+        title.textContent = type === 'error' ? '操作失败' : '操作已生效';
+
+        const body = document.createElement('div');
+        body.textContent = message;
+
+        item.appendChild(title);
+        item.appendChild(body);
+        notice.innerHTML = '';
+        notice.appendChild(item);
+
+        noticeTimer = window.setTimeout(() => {
+          notice.innerHTML = '';
+        }, 3600);
+      }
+
+      async function withButtonBusy(button, pendingText, callback) {
+        if (!button) {
+          return callback();
+        }
+
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = pendingText;
+
+        try {
+          return await callback();
+        } finally {
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      }
+
+      function formatStudentLabel(student) {
+        if (!student) {
+          return '';
+        }
+        const prefix = student.name
+          ? `${student.username} (${student.name})`
+          : student.username;
+        return `${prefix} / Lv.${student.level || 0} / 积分 ${student.total_points || 0}`;
       }
 
       async function studentApi(path, options = {}) {
@@ -76,54 +178,912 @@
         });
       }
 
+      function escapeHtml(text) {
+        return String(text || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function formatDateTime(value) {
+        if (!value) {
+          return '-';
+        }
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+          return value;
+        }
+        return date.toLocaleString('zh-CN', { hour12: false });
+      }
+
+      function getNumericScore(value) {
+        if (value === null || value === undefined || value === '') {
+          return null;
+        }
+        const score = Number(value);
+        return Number.isNaN(score) ? null : score;
+      }
+
+      function formatScore(value) {
+        const score = getNumericScore(value);
+        if (score === null) {
+          return '-';
+        }
+        return Number.isInteger(score) ? String(score) : score.toFixed(1);
+      }
+
+      function formatDate(value) {
+        if (!value) {
+          return '-';
+        }
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+          return value;
+        }
+        return date.toLocaleDateString('zh-CN');
+      }
+
+      function buildRewardEntries() {
+        if (!currentRewardCenter) {
+          return [];
+        }
+
+        const entries = [];
+        const levelItems = currentRewardCenter.level_rewards && Array.isArray(currentRewardCenter.level_rewards.items)
+          ? currentRewardCenter.level_rewards.items
+          : [];
+        levelItems
+          .filter((item) => item && item.reached)
+          .forEach((item) => {
+            entries.push({
+              key: item.key || `level:${item.level}`,
+              title: item.title || `Lv.${item.level} 积分`,
+              subtitle: item.subtitle || '',
+              statusText: item.status_text || '',
+              claimable: !!item.claimable,
+              buttonText: item.button_text || (item.claimable ? `领取 +${item.reward_points || 0}` : '已领取'),
+              points: Number(item.reward_points || 0),
+              claimType: 'level',
+              claimLevel: item.level || 0,
+            });
+          });
+
+        const weeklyBounty = currentRewardCenter.weekly_bounty || null;
+        if (weeklyBounty) {
+          entries.push({
+            key: 'weekly_bounty',
+            title: '本周作业树',
+            subtitle: weeklyBounty.summary_text || '',
+            statusText: weeklyBounty.status_text || '',
+            claimable: !!weeklyBounty.claimable,
+            buttonText: weeklyBounty.claimable ? `领取 +${Number(weeklyBounty.reward_points || 0)}` : '查看进度',
+            points: Number(weeklyBounty.reward_points || 0),
+            claimType: 'weekly_bounty',
+          });
+        }
+
+        const weeklyStreak = currentRewardCenter.weekly_streak || null;
+        if (weeklyStreak) {
+          entries.push({
+            key: 'weekly_streak',
+            title: weeklyStreak.label || '本周连交',
+            subtitle: weeklyStreak.summary_text || '',
+            statusText: weeklyStreak.status_text || '',
+            claimable: !!weeklyStreak.claimable_count,
+            buttonText: weeklyStreak.claimable_count ? `领取 +${Number(weeklyStreak.reward_points || 0)}` : '查看进度',
+            points: Number(weeklyStreak.reward_points || 0),
+            claimType: 'weekly_streak',
+          });
+        }
+
+        const monthlyStreak = currentRewardCenter.monthly_streak || null;
+        if (monthlyStreak) {
+          entries.push({
+            key: 'monthly_streak',
+            title: monthlyStreak.label || '本月连交',
+            subtitle: monthlyStreak.summary_text || '',
+            statusText: monthlyStreak.status_text || '',
+            claimable: !!monthlyStreak.claimable_count,
+            buttonText: monthlyStreak.claimable_count ? `领取 +${Number(monthlyStreak.reward_points || 0)}` : '查看进度',
+            points: Number(monthlyStreak.reward_points || 0),
+            claimType: 'monthly_streak',
+          });
+        }
+
+        return entries.sort((left, right) => Number(right.claimable) - Number(left.claimable));
+      }
+
+      function renderRewardEntry(entry) {
+        return `
+          <div class="feature-item student-claim-item ${entry.claimable ? 'is-claimable' : ''}">
+            <div class="student-claim-head">
+              <strong>${escapeHtml(entry.title)}</strong>
+              <span class="entity-pill ${entry.claimable ? '' : 'readonly'}">${escapeHtml(entry.statusText || (entry.claimable ? '待领取' : '未达成'))}</span>
+            </div>
+            ${entry.subtitle ? `<div class="small">${escapeHtml(entry.subtitle)}</div>` : ''}
+            <div class="student-claim-meta">+${escapeHtml(String(entry.points || 0))} 分</div>
+            <div class="actions student-tool-actions" style="margin-top: 10px;">
+              ${entry.claimable
+                ? `<button class="primary student-claim-btn" type="button" data-claim-type="${escapeHtml(entry.claimType)}"${entry.claimLevel ? ` data-claim-level="${escapeHtml(String(entry.claimLevel))}"` : ''}>${escapeHtml(entry.buttonText || '领取积分')}</button>`
+                : `<button type="button" disabled>${escapeHtml(entry.buttonText || '暂不可领取')}</button>`}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderReportCard(card) {
+        const highlights = Array.isArray(card && card.summary_highlights)
+          ? card.summary_highlights.filter(Boolean)
+          : [];
+        return `
+          <div class="feature-item student-report-card">
+            <div class="student-claim-head">
+              <strong>${escapeHtml(card.share_title || '学习报告')}</strong>
+            </div>
+            <div class="student-report-stats">
+              <div class="summary-card student-mini-card">
+                <div class="summary-label">提交</div>
+                <div class="summary-value">${escapeHtml(String(card.submission_count || 0))}</div>
+              </div>
+              <div class="summary-card student-mini-card">
+                <div class="summary-label">已批改</div>
+                <div class="summary-value">${escapeHtml(String(card.reviewed_submission_count || 0))}</div>
+              </div>
+              <div class="summary-card student-mini-card">
+                <div class="summary-label">平均分</div>
+                <div class="summary-value">${escapeHtml(formatScore(card.average_teacher_score))}</div>
+              </div>
+              <div class="summary-card student-mini-card">
+                <div class="summary-label">最高分</div>
+                <div class="summary-value">${escapeHtml(formatScore(card.highest_teacher_score))}</div>
+              </div>
+            </div>
+            ${highlights.length ? `
+              <div class="student-highlight-list">
+                ${highlights.map((line) => `<div class="student-highlight-item">${escapeHtml(line)}</div>`).join('')}
+              </div>
+            ` : ''}
+            ${card.latest_teacher_comment ? `<div class="student-review-comment">点评：${escapeHtml(card.latest_teacher_comment)}</div>` : ''}
+            <div class="small">${escapeHtml(formatDateTime(card.created_at))}</div>
+            <div class="student-encouragement">${escapeHtml(card.encouragement_text || '继续保持。')}</div>
+          </div>
+        `;
+      }
+
+      function renderStudentUtilityPanels() {
+        const rewardContainer = document.getElementById('studentRewardCenterPanel');
+        const reportContainer = document.getElementById('studentReportPanel');
+        const banner = document.getElementById('studentStatusBanner');
+        if (!rewardContainer || !reportContainer || !banner) {
+          return;
+        }
+
+        if (!currentStudent) {
+          rewardContainer.innerHTML = '<div class="small">登录后自动加载。</div>';
+          reportContainer.innerHTML = '<div class="small">点击上方按钮生成报告。</div>';
+          banner.hidden = true;
+          banner.textContent = '';
+          return;
+        }
+
+        const claimableCount = Number(currentRewardCenter && currentRewardCenter.claimable_reward_count || 0);
+        const claimablePoints = Number(currentRewardCenter && currentRewardCenter.claimable_total_points || 0);
+        if (claimableCount > 0) {
+          banner.hidden = false;
+          banner.textContent = `可领 ${claimableCount} 份 · ${claimablePoints} 分`;
+        } else {
+          banner.hidden = true;
+          banner.textContent = '';
+        }
+
+        const rewardEntries = buildRewardEntries();
+        const learningProgress = currentRewardCenter && currentRewardCenter.learning_progress
+          ? currentRewardCenter.learning_progress
+          : { current_score: 0, total_score: 0, progress_percent: 0 };
+        const weeklyBounty = currentRewardCenter && currentRewardCenter.weekly_bounty
+          ? currentRewardCenter.weekly_bounty
+          : { qualified_count: 0, target_count: 0, status_text: '未加载' };
+
+        rewardContainer.innerHTML = `
+          <div class="student-tool-summary-grid">
+            <div class="summary-card student-mini-card">
+              <div class="summary-label">可领份数</div>
+              <div class="summary-value">${escapeHtml(String(claimableCount))}</div>
+            </div>
+            <div class="summary-card student-mini-card">
+              <div class="summary-label">可领积分</div>
+              <div class="summary-value">${escapeHtml(String(claimablePoints))}</div>
+            </div>
+            <div class="summary-card student-mini-card">
+              <div class="summary-label">学习进度</div>
+              <div class="summary-value">${escapeHtml(String(learningProgress.progress_percent || 0))}%</div>
+            </div>
+            <div class="summary-card student-mini-card">
+              <div class="summary-label">本周作业树</div>
+              <div class="summary-value">${escapeHtml(String(Math.min(Number(weeklyBounty.qualified_count || 0), Number(weeklyBounty.target_count || 0))))} / ${escapeHtml(String(weeklyBounty.target_count || 0))}</div>
+            </div>
+          </div>
+          ${rewardEntries.length
+            ? rewardEntries.map((entry) => renderRewardEntry(entry)).join('')
+            : '<div class="feature-item"><div class="small">当前没有积分条目。</div></div>'}
+        `;
+
+        reportContainer.innerHTML = latestReportCard
+          ? renderReportCard(latestReportCard)
+          : '<div class="feature-item"><div class="small">点击上方按钮生成报告。</div></div>';
+
+        document.querySelectorAll('.student-claim-btn').forEach((button) => {
+          button.addEventListener('click', async (event) => {
+            const claimType = event.currentTarget.dataset.claimType;
+            const claimLevel = event.currentTarget.dataset.claimLevel;
+            await withButtonBusy(event.currentTarget, '领取中...', async () => {
+              const payload = { claimType };
+              if (claimLevel) {
+                payload.level = Number(claimLevel);
+              }
+              const result = await studentApi('/api/student/reward-center/claim', {
+                method: 'POST',
+                body: payload,
+              });
+              showNotice((result.claim_result && (result.claim_result.copy || result.claim_result.title)) || '积分已领取');
+              await loadStudentProfile();
+              await loadStudentRewardCenter({ silent: true });
+            });
+          });
+        });
+      }
+
+      async function loadStudentRewardCenter(options = {}) {
+        currentRewardCenter = await studentApi('/api/student/reward-center');
+        renderStudentUtilityPanels();
+        if (!options.silent && Number(currentRewardCenter.claimable_reward_count || 0) > 0) {
+          showNotice(`可领 ${Number(currentRewardCenter.claimable_reward_count || 0)} 份 · ${Number(currentRewardCenter.claimable_total_points || 0)} 分`);
+        }
+        return currentRewardCenter;
+      }
+
+      async function generateStudentReport(scope, button) {
+        const scopeLabelMap = {
+          week: '本周报告',
+          month: '本月报告',
+          recent10: '最近10次报告',
+        };
+        const payload = await studentApi('/api/student/share-cards', {
+          method: 'POST',
+          body: {
+            mode: 'summary',
+            summaryScope: scope,
+          },
+        });
+        latestReportCard = payload && payload.card ? payload.card : null;
+        renderStudentUtilityPanels();
+        showNotice(`${scopeLabelMap[scope] || '报告'}已生成`);
+        if (button) {
+          document.getElementById('studentReportPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+
+      function getProblemAttachmentKind(item = {}) {
+        const kind = String(item.problemAttachmentKind || item.problem_attachment_kind || item.kind || '').toLowerCase();
+        if (kind === 'pdf' || kind === 'image') {
+          return kind;
+        }
+        const mimeType = String(item.problemAttachmentMimeType || item.problem_attachment_mime_type || item.mimeType || item.mime_type || '').toLowerCase();
+        if (mimeType === 'application/pdf') {
+          return 'pdf';
+        }
+        if (mimeType.startsWith('image/')) {
+          return 'image';
+        }
+        return '';
+      }
+
+      function getProblemAttachments(node) {
+        const rawList = Array.isArray(node && (node.problemAttachments || node.problem_attachments))
+          ? (node.problemAttachments || node.problem_attachments)
+          : [];
+        const normalized = rawList
+          .map((item) => {
+            const url = String(item.url || item.problemAttachmentUrl || '').trim();
+            if (!url) {
+              return null;
+            }
+            const fileName = String(item.fileName || item.file_name || '题目资料').trim() || '题目资料';
+            const displayName = String(item.displayName || item.display_name || fileName).trim() || fileName;
+            const mimeType = String(item.mimeType || item.mime_type || '').trim();
+            const kind = getProblemAttachmentKind({ ...item, mimeType });
+            return {
+              url,
+              fileName,
+              displayName,
+              mimeType,
+              kind,
+            };
+          })
+          .filter(Boolean);
+        if (normalized.length) {
+          return normalized;
+        }
+
+        const fallbackUrl = String(node && (node.problemAttachmentUrl || node.problem_attachment_url) || '').trim();
+        if (!fallbackUrl) {
+          return [];
+        }
+        const fileName = String(node.problemAttachmentFileName || node.problem_attachment_file_name || '题目资料').trim() || '题目资料';
+        const displayName = String(node.problemAttachmentDisplayName || node.problem_attachment_display_name || fileName).trim() || fileName;
+        const mimeType = String(node.problemAttachmentMimeType || node.problem_attachment_mime_type || '').trim();
+        return [{
+          url: fallbackUrl,
+          fileName,
+          displayName,
+          mimeType,
+          kind: getProblemAttachmentKind(node),
+        }];
+      }
+
+      function renderProblemAttachment(node) {
+        const attachments = getProblemAttachments(node);
+        if (!attachments.length) {
+          return '';
+        }
+
+        return `
+          <div class="student-problem-box">
+            <div class="student-problem-head">
+              <strong>题目资料</strong>
+              <span class="student-review-pill pending">${escapeHtml(String(attachments.length))} 份资料</span>
+            </div>
+            <div class="small">可直接打开或下载保存到本地后使用。</div>
+            <div class="student-problem-list">
+              ${attachments.map((item, index) => {
+                const safeUrl = escapeHtml(item.url);
+                const safeName = escapeHtml(item.fileName || `题目资料${index + 1}`);
+                const safeTitle = escapeHtml(item.displayName || item.fileName || `题目资料${index + 1}`);
+                const kindLabel = item.kind === 'pdf' ? 'PDF 题面' : (item.kind === 'image' ? '题图附件' : '题目附件');
+                return `
+                  <div class="student-problem-item">
+                    <div class="student-problem-head">
+                      <strong>${safeTitle}</strong>
+                      <span class="student-review-pill pending">${escapeHtml(kindLabel)}</span>
+                    </div>
+                    <div class="student-problem-actions">
+                      <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">打开资料</a>
+                      <a href="${safeUrl}" download="${safeName}">下载保存</a>
+                    </div>
+                    ${item.kind === 'image' ? `
+                      <div class="student-image-box">
+                        <img class="student-problem-preview" src="${safeUrl}" alt="${safeTitle}" />
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      function hasReview(submission) {
+        return !!(
+          submission
+          && (submission.scored_at
+            || (submission.teacher_comment && String(submission.teacher_comment).trim())
+            || getNumericScore(submission.teacher_score) !== null)
+        );
+      }
+
+      function decorateTree(tree) {
+        function walk(node, depth, path) {
+          if (!node) {
+            return null;
+          }
+
+          const parentId = node.parent_id !== undefined
+            ? node.parent_id
+            : (node.parentId !== undefined ? node.parentId : null);
+          const currentPath = path ? `${path} / ${node.name}` : node.name;
+          const children = Array.isArray(node.children)
+            ? node.children.map((child) => walk(child, depth + 1, currentPath)).filter(Boolean)
+            : [];
+          const isRoot = parentId === null;
+          const hasChildren = children.length > 0;
+          const nodeKey = String(node.id !== undefined && node.id !== null ? node.id : currentPath);
+          if (hasChildren && !branchExpansionState.has(nodeKey)) {
+            branchExpansionState.set(nodeKey, isRoot);
+          }
+          const expanded = hasChildren ? !!branchExpansionState.get(nodeKey) : false;
+          const isLeafTask = node.isLeafTask !== undefined
+            ? !!node.isLeafTask
+            : (!isRoot && children.length === 0);
+          const requiredLevel = Number(node.requiredLevel || node.required_level || 0);
+          const unlocked = node.unlocked !== undefined
+            ? !!node.unlocked
+            : (requiredLevel <= 0 || Number((currentStudent && currentStudent.level) || 0) >= requiredLevel);
+          const submissionHistory = Array.isArray(node.submissionHistory)
+            ? node.submissionHistory
+            : (Array.isArray(node.submission_history) ? node.submission_history : []);
+          const reviewedHistory = submissionHistory.filter((item) => hasReview(item));
+          const highestTeacherScore = node.highestTeacherScore !== undefined
+            ? getNumericScore(node.highestTeacherScore)
+            : (() => {
+              const scoredValues = reviewedHistory
+                .map((item) => getNumericScore(item.teacher_score))
+                .filter((score) => score !== null);
+              return scoredValues.length ? Math.max(...scoredValues) : null;
+            })();
+          const latestReviewed = reviewedHistory[0] || null;
+          const currentScore = node.currentScore !== undefined
+            ? Number(node.currentScore || 0)
+            : (isLeafTask
+              ? (unlocked ? (highestTeacherScore === null ? 0 : highestTeacherScore) : 0)
+              : children.reduce((sum, child) => sum + child.currentScore, 0));
+          const totalScore = node.totalScore !== undefined
+            ? Number(node.totalScore || 0)
+            : (isLeafTask ? (unlocked ? 10 : 0) : children.reduce((sum, child) => sum + child.totalScore, 0));
+          const taskCount = node.taskCount !== undefined
+            ? Number(node.taskCount || 0)
+            : (isLeafTask ? (unlocked ? 1 : 0) : children.reduce((sum, child) => sum + child.taskCount, 0));
+          const scoredTaskCount = node.scoredTaskCount !== undefined
+            ? Number(node.scoredTaskCount || 0)
+            : (isLeafTask
+              ? (unlocked && highestTeacherScore !== null ? 1 : 0)
+              : children.reduce((sum, child) => sum + child.scoredTaskCount, 0));
+
+          return {
+            id: node.id,
+            name: node.name,
+            path: currentPath,
+            depth,
+            nodeKey,
+            isRoot,
+            hasChildren,
+            expanded,
+            isLeafTask,
+            unlocked,
+            requiredLevel,
+            lockedText: node.lockedText || (requiredLevel > 0 ? `达到 ${requiredLevel} 级后解锁` : ''),
+            problemAttachments: getProblemAttachments(node),
+            problemAttachmentUrl: node.problemAttachmentUrl || node.problem_attachment_url || '',
+            problemAttachmentFileName: node.problemAttachmentFileName || node.problem_attachment_file_name || '',
+            problemAttachmentDisplayName: node.problemAttachmentDisplayName || node.problem_attachment_display_name || '',
+            problemAttachmentMimeType: node.problemAttachmentMimeType || node.problem_attachment_mime_type || '',
+            problemAttachmentKind: getProblemAttachmentKind(node),
+            currentScore,
+            totalScore,
+            taskCount,
+            scoredTaskCount,
+            submissionCount: submissionHistory.length,
+            highestTeacherScore,
+            latestTeacherScore: latestReviewed ? getNumericScore(latestReviewed.teacher_score) : null,
+            latestTeacherComment: latestReviewed ? (latestReviewed.teacher_comment || '') : '',
+            latestSubmittedAt: submissionHistory[0] ? submissionHistory[0].submitted_at : '',
+            submissionHistory,
+            children,
+          };
+        }
+
+        const root = walk(tree.root, 0, '');
+        return {
+          ...tree,
+          root,
+          stats: {
+            currentScore: root ? root.currentScore : 0,
+            totalScore: root ? root.totalScore : 0,
+            scoredTaskCount: root ? root.scoredTaskCount : 0,
+            taskCount: root ? root.taskCount : 0,
+          },
+        };
+      }
+
+      function getSubmissionFileKind(item = {}) {
+        const explicit = String(item.kind || item.fileKind || item.file_kind || '').toLowerCase();
+        if (explicit === 'image' || explicit === 'pdf') {
+          return explicit;
+        }
+        const mimeType = String(item.mimeType || item.mime_type || '').toLowerCase();
+        if (mimeType.startsWith('image/')) {
+          return 'image';
+        }
+        if (mimeType === 'application/pdf') {
+          return 'pdf';
+        }
+        const fileName = String(item.fileName || item.file_name || '').toLowerCase();
+        if (/\.(png|jpe?g|webp|gif|bmp|svg)$/.test(fileName)) {
+          return 'image';
+        }
+        if (fileName.endsWith('.pdf')) {
+          return 'pdf';
+        }
+        return 'file';
+      }
+
+      function getSubmissionFileItems(submission) {
+        const rawItems = Array.isArray(submission && (submission.submissionFileItems || submission.submission_file_items))
+          ? (submission.submissionFileItems || submission.submission_file_items)
+          : [];
+        const normalized = rawItems
+          .map((item, index) => {
+            const url = String(item.url || '').trim();
+            if (!url) {
+              return null;
+            }
+            const fileName = String(item.fileName || item.file_name || `附件${index + 1}`).trim() || `附件${index + 1}`;
+            const mimeType = String(item.mimeType || item.mime_type || '').trim();
+            const kind = getSubmissionFileKind({ fileName, mimeType, kind: item.kind });
+            return {
+              url,
+              fileName,
+              mimeType,
+              kind,
+            };
+          })
+          .filter(Boolean);
+        if (normalized.length) {
+          return normalized;
+        }
+
+        const rawImageItems = Array.isArray(submission && (submission.codeImageItems || submission.code_image_items))
+          ? (submission.codeImageItems || submission.code_image_items)
+          : [];
+        const imageItems = rawImageItems
+          .map((item, index) => {
+            const url = String(item.url || item.code_image_url || '').trim();
+            if (!url) {
+              return null;
+            }
+            return {
+              url,
+              fileName: String(item.fileName || item.file_name || `图片${index + 1}`).trim() || `图片${index + 1}`,
+              mimeType: String(item.mimeType || item.mime_type || 'image/jpeg').trim(),
+              kind: 'image',
+            };
+          })
+          .filter(Boolean);
+        if (imageItems.length) {
+          return imageItems;
+        }
+
+        const urlList = Array.isArray(submission && (submission.codeImageUrls || submission.code_image_urls))
+          ? (submission.codeImageUrls || submission.code_image_urls)
+          : [];
+        if (urlList.length) {
+          return urlList
+            .map((url, index) => ({
+              url: String(url || '').trim(),
+              fileName: `图片${index + 1}`,
+              mimeType: 'image/jpeg',
+              kind: 'image',
+            }))
+            .filter((item) => item.url);
+        }
+        const fallbackUrl = String(submission && (submission.codeImageUrl || submission.code_image_url) || '').trim();
+        return fallbackUrl
+          ? [{
+            url: fallbackUrl,
+            fileName: '图片1',
+            mimeType: 'image/jpeg',
+            kind: 'image',
+          }]
+          : [];
+      }
+
+      function getSubmissionImageItems(submission) {
+        return getSubmissionFileItems(submission).filter((item) => item.kind === 'image');
+      }
+
+      function renderSubmissionItem(submission) {
+        const reviewed = hasReview(submission);
+        const fileItems = getSubmissionFileItems(submission);
+        const imageItems = fileItems.filter((item) => item.kind === 'image');
+        const otherFileItems = fileItems.filter((item) => item.kind !== 'image');
+        return `
+          <div class="student-submission-item">
+            <div class="student-submission-head">
+              <strong>提交 #${escapeHtml(submission.id)}</strong>
+              <span class="student-review-pill ${reviewed ? 'reviewed' : 'pending'}">${reviewed ? '老师已批改' : '等待老师批改'}</span>
+            </div>
+            <div class="small">提交时间：${escapeHtml(formatDateTime(submission.submitted_at))}${reviewed && submission.scored_at ? `，批改时间：${escapeHtml(formatDateTime(submission.scored_at))}` : ''}</div>
+            <div class="small">本次评分：${escapeHtml(formatScore(submission.teacher_score))} / 10</div>
+            ${submission.teacher_comment ? `<div class="student-review-comment">老师评语：${escapeHtml(submission.teacher_comment)}</div>` : ''}
+            ${submission.code_text ? `<pre class="student-code-block">${escapeHtml(submission.code_text)}</pre>` : ''}
+            ${otherFileItems.length ? `
+              <div class="student-file-list">
+                ${otherFileItems.map((item, index) => `
+                  <div class="student-file-item">
+                    <div class="student-problem-head">
+                      <strong>${escapeHtml(item.fileName || `附件${index + 1}`)}</strong>
+                      <span class="student-review-pill pending">${escapeHtml(item.kind === 'pdf' ? 'PDF 附件' : '文件附件')}</span>
+                    </div>
+                    <div class="student-file-actions">
+                      <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">打开附件</a>
+                      <a href="${escapeHtml(item.url)}" download="${escapeHtml(item.fileName || `附件${index + 1}`)}">下载保存</a>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            ${imageItems.length ? `
+              <div class="student-image-grid">
+                ${imageItems.map((item, index) => `
+                  <div class="student-image-box">
+                    <a class="student-submission-image-link" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">查看${escapeHtml(item.fileName || `图片${index + 1}`)}</a>
+                    <img class="student-submission-image" src="${escapeHtml(item.url)}" alt="${escapeHtml(item.fileName || `图片${index + 1}`)}" />
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
       function renderTreeNode(node) {
-        if (!node) return '';
-        const scoreText = node.score !== null && node.score !== undefined
-          ? `<span class="score">分数: ${node.score}${node.comment ? `，评语: ${node.comment}` : ''}</span>`
+        if (!node) {
+          return '';
+        }
+
+        const typeLabel = node.isRoot ? '学习树' : (node.isLeafTask ? '任务点' : '父节点');
+        const childrenHtml = node.expanded
+          ? (node.children || []).map((child) => renderTreeNode(child)).join('')
+          : '';
+        const currentScore = Number(node.currentScore || 0);
+        const totalScore = Number(node.totalScore || 0);
+        const progressPercent = totalScore > 0 ? Math.max(0, Math.min(100, Math.round((currentScore / totalScore) * 100))) : 0;
+        const taskMeta = !node.unlocked
+          ? `当前未解锁，${escapeHtml(node.lockedText || '满足条件后开放')}`
+          : (node.isLeafTask
+            ? `历史提交 ${node.submissionCount} 次，节点当前计分取最高分 <strong>${escapeHtml(formatScore(node.highestTeacherScore))}</strong> / 10`
+            : `当前已计分任务点 ${escapeHtml(String(node.scoredTaskCount))} / ${escapeHtml(String(node.taskCount))}`);
+        const branchAction = node.hasChildren
+          ? `<button type="button" class="student-branch-toggle ${node.expanded ? 'is-open' : ''}" data-node-id="${escapeHtml(node.nodeKey)}" aria-expanded="${node.expanded ? 'true' : 'false'}">${node.expanded ? '收起分支' : '展开分支'}</button>`
+          : '';
+        const branchHint = node.hasChildren && !node.expanded
+          ? `<div class="student-branch-hint">包含 ${escapeHtml(String(node.children.length))} 个子节点，点击展开继续浏览。</div>`
           : '';
 
-        const children = (node.children || []).map((child) => renderTreeNode(child)).join('');
         return `
-          <li class="tree-item">
-            <div>${node.name}${scoreText}</div>
-            ${children ? `<ul>${children}</ul>` : ''}
-          </li>
+          <div class="student-node-card ${node.isLeafTask ? 'leaf' : 'branch'} ${node.expanded ? 'is-expanded' : ''} ${!node.unlocked ? 'locked' : ''}" style="margin-left: ${node.depth * 18}px;">
+            <div class="student-node-header">
+              <div>
+                <div class="student-node-title">${escapeHtml(node.name)}</div>
+                <div class="small">${escapeHtml(node.path)}</div>
+              </div>
+              <div class="student-node-actions">
+                <span class="student-node-kind">${typeLabel}</span>
+                ${branchAction}
+              </div>
+            </div>
+
+            <div class="student-node-score">
+              当前分数 <strong>${escapeHtml(formatScore(node.currentScore))}</strong> / ${escapeHtml(formatScore(node.totalScore))} · 进度 ${escapeHtml(String(progressPercent))}%
+            </div>
+            <div class="small" style="margin-top: 6px;">${taskMeta}</div>
+            ${node.latestTeacherComment ? `<div class="student-review-comment" style="margin-top: 8px;">最近老师回复：${escapeHtml(node.latestTeacherComment)}</div>` : ''}
+            ${branchHint}
+
+            ${node.isLeafTask && node.unlocked ? `
+              <details class="student-task-panel">
+                <summary>提交答案并查看往来批改</summary>
+                ${renderProblemAttachment(node)}
+                <form class="student-submission-form" data-node-id="${escapeHtml(node.id)}">
+                  <label>本次提交文本</label>
+                  <textarea name="codeText" placeholder="可粘贴代码、思路说明或作业答案"></textarea>
+                  <label>本次提交附件（可选，可多份）</label>
+                  <input name="fileItems" type="file" multiple />
+                  <div class="small" style="margin-top: 6px;">支持图片、cpp、pdf、docx 等任意文件；图片仍会保留缩略图。</div>
+                  <div class="student-form-actions">
+                    <button class="primary" type="submit">提交本次答案</button>
+                  </div>
+                </form>
+                <div class="student-history-list">
+                  ${node.submissionHistory.length
+                    ? node.submissionHistory.map((submission) => renderSubmissionItem(submission)).join('')
+                    : '<div class="small">还没有提交记录。</div>'}
+                </div>
+              </details>
+            ` : ''}
+
+            ${childrenHtml ? `<div class="student-node-children">${childrenHtml}</div>` : ''}
+          </div>
         `;
+      }
+
+      function attachSubmissionHandlers() {
+        document.querySelectorAll('.student-submission-form').forEach((form) => {
+          form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const submitButton = form.querySelector('button[type="submit"]');
+            const codeText = (form.elements.codeText.value || '').trim();
+            const attachmentFiles = Array.from(form.elements.fileItems.files || []);
+
+            if (!codeText && !attachmentFiles.length) {
+              showNotice('请至少填写文本或上传附件后再提交', 'error');
+              return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = '提交中...';
+
+            try {
+              const fileItems = attachmentFiles.length
+                ? await Promise.all(attachmentFiles.map(async (file, index) => ({
+                  base64: await readFileAsDataUrl(file),
+                  mimeType: file.type || undefined,
+                  fileName: file.name || `提交附件${index + 1}`,
+                })))
+                : [];
+
+              await studentApi('/api/student/node-submissions', {
+                method: 'POST',
+                body: {
+                  nodeId: form.dataset.nodeId,
+                  codeText,
+                  fileItems,
+                },
+              });
+              showNotice(fileItems.length ? `提交成功，已附带 ${fileItems.length} 个文件` : '提交成功，等待老师批改');
+              await loadMyTrees();
+              await loadStudentRewardCenter({ silent: true });
+            } catch (err) {
+              showNotice(err.message, 'error');
+              submitButton.disabled = false;
+              submitButton.textContent = '提交本次答案';
+            }
+          });
+        });
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('读取附件失败'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function getTreeRenderKey(tree) {
+        return String(tree.id || tree.systemKey || tree.system_key || tree.title || 'tree');
+      }
+
+      function attachTreeShellHandlers() {
+        document.querySelectorAll('.student-tree-shell').forEach((details) => {
+          details.addEventListener('toggle', () => {
+            const treeKey = String(details.dataset.treeKey || '').trim();
+            if (!treeKey) {
+              return;
+            }
+            treeOpenState.set(treeKey, details.open);
+          });
+        });
+      }
+
+      function attachBranchToggleHandlers() {
+        document.querySelectorAll('.student-branch-toggle').forEach((button) => {
+          button.addEventListener('click', () => {
+            const nodeId = String(button.dataset.nodeId || '').trim();
+            if (!nodeId) {
+              return;
+            }
+            const current = !!branchExpansionState.get(nodeId);
+            branchExpansionState.set(nodeId, !current);
+            currentTrees = currentTrees.map((tree) => decorateTree(tree));
+            renderTrees(currentTrees);
+          });
+        });
       }
 
       function renderTrees(trees) {
         const container = document.getElementById('treesContainer');
         if (!trees.length) {
-          container.innerHTML = '<p class="small">还没有可展示的学习树，请联系老师创建章节。</p>';
+          container.innerHTML = '<div class="panel"><div class="empty-state">还没有可展示的学习树，请联系老师创建章节。</div></div>';
           return;
         }
 
         container.innerHTML = trees
-          .map((tree) => `
-            <div class="panel">
-              <h3>${tree.title}</h3>
-              <p class="small">${tree.chapterDesc || ''}</p>
-              <div class="tree-box">
-                <ul>
-                  ${tree.root ? renderTreeNode(tree.root) : '<li class="tree-item">暂无节点</li>'}
-                </ul>
+          .map((tree, index) => {
+            const treeKey = getTreeRenderKey(tree);
+            const treeOpen = treeOpenState.has(treeKey) ? !!treeOpenState.get(treeKey) : index === 0;
+            return `
+            <details class="student-tree-shell ${treeOpen ? 'is-open' : ''}" data-tree-key="${escapeHtml(treeKey)}" ${treeOpen ? 'open' : ''}>
+              <summary class="student-tree-summary">
+                <div class="student-tree-summary-main">
+                  <h3>${escapeHtml(tree.title)}</h3>
+                  ${tree.chapterDesc ? `<p class="small">${escapeHtml(tree.chapterDesc)}</p>` : ''}
+                </div>
+                <div class="student-tree-summary-stats">
+                  <div class="student-stat-chip">
+                    <span>分数</span>
+                    <strong>${escapeHtml(formatScore(tree.stats.currentScore))} / ${escapeHtml(formatScore(tree.stats.totalScore))}</strong>
+                  </div>
+                  <div class="student-stat-chip">
+                    <span>计分</span>
+                    <strong>${escapeHtml(String(tree.stats.scoredTaskCount))} / ${escapeHtml(String(tree.stats.taskCount))}</strong>
+                  </div>
+                </div>
+              </summary>
+              <div class="student-tree-body">
+                <div class="student-tree-list">
+                  ${tree.root ? renderTreeNode(tree.root) : '<div class="small">暂无节点</div>'}
+                </div>
               </div>
-            </div>
-          `)
+            </details>
+          `;
+          })
           .join('');
+
+        attachTreeShellHandlers();
+        attachBranchToggleHandlers();
+        attachSubmissionHandlers();
+      }
+
+      function renderStudentOverview() {
+        const container = document.getElementById('studentSummaryCards');
+        if (!currentStudent) {
+          container.innerHTML = '';
+          return;
+        }
+
+        const learningTrees = currentTrees.filter((tree) => String(tree.treeType || '') !== 'reward');
+        const availableTasks = learningTrees.reduce((sum, tree) => sum + Number(tree.stats.taskCount || 0), 0);
+        const currentScore = learningTrees.reduce((sum, tree) => sum + Number(tree.stats.currentScore || 0), 0);
+        const totalScore = learningTrees.reduce((sum, tree) => sum + Number(tree.stats.totalScore || 0), 0);
+
+        container.innerHTML = `
+          <div class="summary-card">
+            <div class="summary-label">等级</div>
+            <div class="summary-value">Lv.${escapeHtml(String(currentStudent.level || 0))}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">积分</div>
+            <div class="summary-value">${escapeHtml(String(currentStudent.total_points || 0))}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">开放任务</div>
+            <div class="summary-value">${escapeHtml(String(availableTasks))}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">总分</div>
+            <div class="summary-value">${escapeHtml(formatScore(currentScore))} / ${escapeHtml(formatScore(totalScore))}</div>
+          </div>
+        `;
       }
 
       function refreshAuthUI() {
         document.getElementById('studentDashboard').hidden = !currentStudent;
         document.getElementById('studentLoginPanel').hidden = !!currentStudent;
-        document.getElementById('studentName').textContent = currentStudent
-          ? `${currentStudent.username}${currentStudent.name ? ` (${currentStudent.name})` : ''}`
-          : '';
+        document.getElementById('studentName').textContent = formatStudentLabel(currentStudent);
+        renderStudentOverview();
+        renderStudentUtilityPanels();
       }
 
-      async function loadMyTrees() {
+      function clearStudentSession() {
+        accessToken = '';
+        currentStudent = null;
+        currentTrees = [];
+        currentRewardCenter = null;
+        latestReportCard = null;
+        branchExpansionState = new Map();
+        treeOpenState = new Map();
+        localStorage.removeItem(TOKEN_KEY);
+        refreshAuthUI();
+      }
+
+      async function loadStudentProfile() {
+        currentStudent = await studentApi('/api/student/me');
+        refreshAuthUI();
+        return currentStudent;
+      }
+
+      async function loadMyTrees(options = {}) {
+        if (options.refreshProfile !== false) {
+          await loadStudentProfile();
+        }
         const trees = await studentApi('/api/student/trees');
-        renderTrees(trees);
+        currentTrees = trees.map((tree) => decorateTree(tree));
+        renderStudentOverview();
+        renderTrees(currentTrees);
       }
 
       async function checkStudentSession() {
@@ -132,14 +1092,17 @@
           return;
         }
         try {
-          currentStudent = await studentApi('/api/student/me');
-          refreshAuthUI();
-          await loadMyTrees();
+          await loadStudentProfile();
         } catch (_err) {
-          accessToken = '';
-          localStorage.removeItem(TOKEN_KEY);
-          currentStudent = null;
-          refreshAuthUI();
+          clearStudentSession();
+          return;
+        }
+
+        try {
+          await loadMyTrees({ refreshProfile: false });
+          await loadStudentRewardCenter({ silent: true });
+        } catch (err) {
+          showNotice(`已登录，但学生数据加载失败：${err.message}`, 'error');
         }
       }
 
@@ -152,40 +1115,103 @@
 
       document.getElementById('studentLoginForm').addEventListener('submit', async (event) => {
         event.preventDefault();
+        const submitButton = event.submitter || event.target.querySelector('button[type="submit"]');
+        await withButtonBusy(submitButton, '登录中...', async () => {
+          try {
+            const username = document.getElementById('studentUsername').value.trim();
+            const password = document.getElementById('studentPassword').value;
+            const payload = await studentApi('/api/student/login', {
+              method: 'POST',
+              body: { username, password },
+            });
+            setStudentSession(payload);
+            showNotice('登录成功');
+            await loadMyTrees();
+            await loadStudentRewardCenter({ silent: true });
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
+      });
+
+      document.getElementById('reloadTreesBtn').addEventListener('click', async (event) => {
+        await withButtonBusy(event.currentTarget, '刷新中...', async () => {
+          try {
+            await loadMyTrees();
+            await loadStudentRewardCenter({ silent: true });
+            showNotice('学生数据已刷新');
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
+      });
+
+      document.getElementById('studentReportBtn').addEventListener('click', async (event) => {
+        document.getElementById('studentReportPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (latestReportCard) {
+          return;
+        }
+        await withButtonBusy(event.currentTarget, '生成中...', async () => {
+          try {
+            await generateStudentReport('week');
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
+      });
+
+      document.getElementById('studentRewardsBtn').addEventListener('click', async () => {
+        document.getElementById('studentRewardCenterPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
         try {
-          const username = document.getElementById('studentUsername').value.trim();
-          const password = document.getElementById('studentPassword').value;
-          const payload = await studentApi('/api/student/login', {
-            method: 'POST',
-            body: { username, password },
-          });
-          setStudentSession(payload);
-          showNotice('登录成功');
-          await loadMyTrees();
+          await loadStudentRewardCenter({ silent: true });
         } catch (err) {
           showNotice(err.message, 'error');
         }
       });
 
-      document.getElementById('reloadTreesBtn').addEventListener('click', async () => {
-        try {
-          await loadMyTrees();
-          showNotice('学习树已刷新');
-        } catch (err) {
-          showNotice(err.message, 'error');
-        }
+      document.getElementById('reportWeekBtn').addEventListener('click', async (event) => {
+        await withButtonBusy(event.currentTarget, '生成中...', async () => {
+          try {
+            await generateStudentReport('week', event.currentTarget);
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
       });
 
-      document.getElementById('studentLogoutBtn').addEventListener('click', async () => {
-        try {
-          await studentApi('/api/student/logout', { method: 'POST' });
-        } catch (_err) {
+      document.getElementById('reportMonthBtn').addEventListener('click', async (event) => {
+        await withButtonBusy(event.currentTarget, '生成中...', async () => {
+          try {
+            await generateStudentReport('month', event.currentTarget);
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
+      });
+
+      document.getElementById('reportRecentBtn').addEventListener('click', async (event) => {
+        await withButtonBusy(event.currentTarget, '生成中...', async () => {
+          try {
+            await generateStudentReport('recent10', event.currentTarget);
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
+      });
+
+      document.getElementById('studentLogoutBtn').addEventListener('click', async (event) => {
+        if (!confirm('确定退出当前学生账号吗？')) {
+          return;
         }
-        accessToken = '';
-        currentStudent = null;
-        localStorage.removeItem(TOKEN_KEY);
-        refreshAuthUI();
-        showNotice('已退出');
+
+        await withButtonBusy(event.currentTarget, '退出中...', async () => {
+          try {
+            await studentApi('/api/student/logout', { method: 'POST' });
+          } catch (_err) {
+          }
+          clearStudentSession();
+          showNotice('已退出');
+        });
       });
 
       checkStudentSession();

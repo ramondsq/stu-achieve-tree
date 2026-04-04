@@ -1,0 +1,271 @@
+@import '../../app.wxss';
+
+.pet-page {
+  gap: 14rpx;
+}
+
+.pet-hero-grid {
+  margin-top: 16rpx;
+  display: flex;
+  gap: 16rpx;
+  align-items: stretch;
+}
+
+.pet-hero-main,
+.pet-hero-points,
+.pet-stage-shell,
+.pet-item-row,
+.pet-stat-item {
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(112, 152, 224, 0.18);
+  background: linear-gradient(180deg, rgba(10, 22, 42, 0.92), rgba(7, 16, 32, 0.94));
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.04);
+}
+
+.pet-hero-main {
+  padding: 22rpx;
+}
+
+.pet-hero-points {
+  padding: 22rpx 18rpx;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.pet-points-value,
+.pet-hero-name {
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #f5fbff;
+}
+
+.pet-hero-subtle {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: rgba(219, 239, 255, 0.78);
+}
+
+.pet-hero-copy {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.68;
+  color: rgba(189, 208, 235, 0.76);
+}
+
+.pet-stage-shell {
+  margin: 14rpx 0;
+  min-height: 220rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26rpx;
+}
+
+.pet-stage-placeholder {
+  text-align: center;
+  font-size: 26rpx;
+  line-height: 1.7;
+  color: rgba(202, 223, 255, 0.78);
+}
+
+.pet-species-card {
+  margin-top: 14rpx;
+  padding: 18rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(112, 152, 224, 0.18);
+  background: linear-gradient(180deg, rgba(10, 22, 42, 0.92), rgba(7, 16, 32, 0.94));
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.04);
+}
+
+.pet-species-preview {
+  min-height: 220rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(123, 166, 241, 0.14);
+  background: linear-gradient(180deg, rgba(11, 25, 49, 0.96), rgba(8, 18, 36, 0.94));
+}
+
+.pet-species-image {
+  width: 100%;
+  height: 220rpx;
+}
+
+.pet-species-placeholder {
+  text-align: center;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: rgba(202, 223, 255, 0.72);
+}
+
+.pet-stat-list {
+  margin-top: 14rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.pet-stat-item {
+  padding: 18rpx;
+}
+
+.pet-stat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+  color: #edf6ff;
+  font-size: 26rpx;
+}
+
+.pet-item-row {
+  margin-top: 12rpx;
+  padding: 18rpx;
+  display: flex;
+  gap: 16rpx;
+  justify-content: space-between;
+}
+
+.pet-item-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.pet-item-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #f3f8ff;
+}
+
+.pet-item-effect {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: rgba(150, 230, 215, 0.88);
+}
+
+.pet-item-side {
+  width: 180rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  align-items: flex-end;
+}
+
+.pet-item-cost {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #96d5ff;
+}
+
+.pet-hero-main {
+  flex: 1;
+}
+
+.pet-hero-points {
+  width: 210rpx;
+  flex-shrink: 0;
+}
+
+.pet-item-row {
+  flex-direction: column;
+}
+
+.pet-item-side {
+  width: auto;
+  align-items: stretch;
+}
+
+.empty-state {
+  margin-top: 12rpx;
+  padding: 22rpx;
+  border-radius: 24rpx;
+  border: 1rpx dashed rgba(112, 152, 224, 0.18);
+  background: rgba(10, 20, 38, 0.72);
+}
+
+.reward-progress-track {
+  margin-top: 10rpx;
+  height: 14rpx;
+  border-radius: 999rpx;
+  background: rgba(59, 132, 214, 0.12);
+  overflow: hidden;
+}
+
+.reward-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.reward-progress-fill-teal {
+  background: linear-gradient(90deg, #1db0a0, #7fe1d4);
+}
+
+.reward-progress-fill-blue {
+  background: linear-gradient(90deg, #4d8eff, #9ec6ff);
+}
+
+.reward-progress-fill-green {
+  background: linear-gradient(90deg, #2ca66a, #98efc1);
+}
+
+.reward-metric-row {
+  margin-top: 12rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.reward-metric {
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: rgba(210, 224, 246, 0.80);
+  background: rgba(12, 25, 48, 0.82);
+  border: 1rpx solid rgba(108, 149, 211, 0.14);
+}
+
+.mini-btn {
+  min-height: 72rpx;
+  padding: 0 20rpx;
+  font-size: 24rpx;
+}
+
+.pet-stage-image {
+  width: 100%;
+  height: 260rpx;
+}
+
+.pet-visual-chip-row {
+  margin: 14rpx 0 10rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.pet-visual-chip {
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  color: rgba(198, 219, 248, 0.72);
+  background: rgba(10, 21, 38, 0.82);
+  border: 1rpx solid rgba(112, 152, 224, 0.14);
+}
+
+.pet-visual-chip.has-frames {
+  color: rgba(169, 240, 226, 0.88);
+}
+
+.pet-visual-chip.is-active {
+  color: #f3fbff;
+  background: linear-gradient(180deg, rgba(23, 73, 117, 0.92), rgba(13, 43, 71, 0.92));
+  border-color: rgba(96, 198, 255, 0.42);
+  box-shadow: 0 10rpx 22rpx rgba(20, 95, 146, 0.22);
+}

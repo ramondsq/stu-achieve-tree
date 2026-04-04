@@ -4,16 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>学习进度成就树系统</title>
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div class="container">
-      <h1>学习进度成就树系统</h1>
+    <div class="container page-shell">
+      <header class="page-hero">
+        <div>
+          <div class="eyebrow">Achievement Tree</div>
+          <h1>学习进度成就树系统</h1>
+          <p class="hero-copy">
+            按角色进入对应界面。老师端采用分区工作台，学生端采用个人概览与折叠章节树，小程序适合日常提交和微信绑定。
+          </p>
+        </div>
+      </header>
+
       <section class="panel">
-        <p>请选择入口：</p>
-        <div class="inline">
-          <a href="/teacher.html"><button class="primary">老师后台</button></a>
-          <a href="/student.html"><button>学生端 Web 演示</button></a>
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">选择入口</h2>
+            <p class="section-copy">根据身份进入对应页面。</p>
+          </div>
+        </div>
+        <div class="quick-actions">
+          <a href="./teacher.html"><button class="primary" type="button">老师后台</button></a>
+          <a href="./student.html"><button type="button">学生端</button></a>
         </div>
       </section>
     </div>

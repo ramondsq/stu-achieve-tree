@@ -1,0 +1,283 @@
+@import "../../app.wxss";
+
+.reward-page {
+  gap: 12rpx;
+}
+
+.reward-hero {
+  overflow: hidden;
+}
+
+.reward-hero-summary {
+  margin-top: 12rpx;
+  padding: 18rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(180deg, rgba(14, 36, 68, 0.82), rgba(8, 20, 40, 0.88));
+  border: 1rpx solid rgba(103, 151, 255, 0.18);
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.04);
+}
+
+
+.reward-hero-points {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #f3fdff;
+}
+
+.reward-hero-copy {
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  color: rgba(228, 247, 255, 0.84);
+}
+
+.reward-top-stats {
+  margin-top: 14rpx;
+}
+
+.reward-hero-actions {
+  margin-top: 12rpx;
+}
+
+.reward-section-card {
+  overflow: hidden;
+}
+
+.reward-progress-track {
+  margin-top: 12rpx;
+  height: 14rpx;
+  border-radius: 999rpx;
+  background: rgba(59, 132, 214, 0.12);
+  overflow: hidden;
+}
+
+.reward-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.reward-progress-fill-teal {
+  background: linear-gradient(90deg, #1db0a0, #7fe1d4);
+}
+
+.reward-progress-fill-blue {
+  background: linear-gradient(90deg, #4d8eff, #9ec6ff);
+}
+
+.reward-progress-fill-green {
+  background: linear-gradient(90deg, #2ca66a, #98efc1);
+}
+
+.reward-metric-row {
+  margin-top: 12rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.reward-metric {
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: rgba(210, 224, 246, 0.80);
+  background: rgba(12, 25, 48, 0.82);
+  border: 1rpx solid rgba(108, 149, 211, 0.14);
+}
+
+
+.reward-claim-row {
+  margin-top: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.reward-status-chip {
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: rgba(208, 223, 246, 0.80);
+  background: rgba(14, 27, 50, 0.84);
+  border: 1rpx solid rgba(108, 149, 211, 0.14);
+}
+
+
+.reward-status-chip.is-claimable {
+  color: #92fff2;
+  background: rgba(10, 48, 58, 0.88);
+}
+
+.reward-status-chip.is-claimed {
+  color: #9bf2be;
+  background: rgba(12, 43, 36, 0.88);
+}
+
+.reward-claim-btn {
+  min-width: 188rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.reward-claim-btn:active {
+  transform: translateY(2rpx) scale(0.985);
+}
+
+.reward-level-item {
+  margin-top: 12rpx;
+  padding: 18rpx;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(97, 132, 189, 0.20);
+  background: linear-gradient(180deg, rgba(9, 20, 40, 0.94), rgba(7, 17, 34, 0.94));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14rpx;
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.03), 0 14rpx 24rpx rgba(1, 8, 20, 0.24);
+}
+
+
+.reward-level-item.is-claimable {
+  border-color: rgba(103, 224, 202, 0.72);
+  box-shadow: 0 14rpx 30rpx rgba(47, 204, 179, 0.14);
+}
+
+.reward-level-item.is-claimed {
+  border-color: rgba(129, 224, 167, 0.88);
+}
+
+.reward-level-item.is-locked {
+  opacity: 0.82;
+}
+
+.reward-level-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.reward-level-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #f4f8ff;
+}
+
+.reward-level-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14rpx;
+}
+
+.reward-level-points {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #89f6e4;
+}
+
+.claim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+
+.claim-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(24, 83, 136, 0.32);
+}
+
+.claim-overlay-card {
+  position: absolute;
+  left: 32rpx;
+  right: 32rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 42rpx 32rpx 30rpx;
+  border-radius: 30rpx;
+  background: linear-gradient(180deg, rgba(6, 18, 38, 0.98), rgba(8, 31, 56, 0.98));
+  border: 1rpx solid rgba(173, 234, 255, 0.26);
+  box-shadow: 0 30rpx 64rpx rgba(1, 8, 20, 0.48);
+  overflow: hidden;
+  animation: claim-card-rise 320ms ease both;
+}
+
+.claim-overlay-orb {
+  width: 180rpx;
+  height: 180rpx;
+  margin: 0 auto 20rpx;
+  border-radius: 999rpx;
+  background: radial-gradient(circle, rgba(204, 255, 249, 1), rgba(110, 214, 255, 0.88), rgba(110, 214, 255, 0));
+  animation: claim-orb-pulse 1.8s ease-in-out infinite;
+}
+
+.claim-overlay-points {
+  text-align: center;
+  font-size: 68rpx;
+  font-weight: 700;
+  color: #f0fcff;
+}
+
+.claim-overlay-title {
+  margin-top: 14rpx;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #f9fbff;
+}
+
+.claim-overlay-copy {
+  margin: 12rpx 0 24rpx;
+  text-align: center;
+  font-size: 24rpx;
+  line-height: 1.56;
+  color: rgba(225, 235, 252, 0.78);
+}
+
+.claim-overlay-particle {
+  position: absolute;
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 999rpx;
+  background: rgba(147, 242, 228, 0.78);
+  box-shadow: 0 0 24rpx rgba(107, 230, 213, 0.46);
+  animation: claim-particle-float 2.1s ease-in-out infinite;
+}
+
+.particle-0 { top: 42rpx; left: 56rpx; }
+.particle-1 { top: 88rpx; right: 72rpx; animation-delay: 180ms; }
+.particle-2 { top: 210rpx; left: 88rpx; animation-delay: 320ms; }
+.particle-3 { top: 236rpx; right: 90rpx; animation-delay: 460ms; }
+.particle-4 { bottom: 124rpx; left: 100rpx; animation-delay: 620ms; }
+.particle-5 { bottom: 148rpx; right: 116rpx; animation-delay: 780ms; }
+
+@keyframes claim-card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(-46%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+@keyframes claim-orb-pulse {
+  0%, 100% {
+    transform: scale(0.94);
+    opacity: 0.78;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes claim-particle-float {
+  0%, 100% {
+    transform: translateY(0) scale(0.9);
+    opacity: 0.48;
+  }
+  50% {
+    transform: translateY(-18rpx) scale(1.15);
+    opacity: 1;
+  }
+}

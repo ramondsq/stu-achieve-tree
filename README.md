@@ -9,7 +9,7 @@
 - 小程序端：`wx.cloud.callFunction` 调用 `api`
 - Web 端：CloudBase Web SDK 匿名登录后调用 `api`
 - 文档型数据库：CloudBase NoSQL
-- 图片存储：CloudBase 云存储（私有桶，通过云函数生成临时访问地址）
+- 附件存储：独立 COS 对象存储（通过云函数上传、签名下载、删除）
 
 当前环境：
 
@@ -71,6 +71,7 @@
   - `DELETE /api/students/:id`
 - 学习树管理
   - `GET /api/trees`
+  - `GET /api/system-tree-settings`
   - `POST /api/trees`
   - `PUT /api/trees/:id`
   - `DELETE /api/trees/:id`
@@ -121,6 +122,23 @@
 
 如果后续更换环境，需要同步修改这个文件并重新上传静态资源。
 
+## COS 附件存储配置
+
+当前版本已经把题目附件和学生提交附件切到独立 COS，对应云函数 `api` 需要配置以下环境变量：
+
+- `COS_SECRET_ID`
+- `COS_SECRET_KEY`
+- `COS_SESSION_TOKEN`（可选，使用临时密钥时配置）
+- `COS_BUCKET`
+- `COS_REGION`
+- `COS_URL_EXPIRES_SECONDS`（可选，默认 `3600`）
+
+说明：
+
+- 新上传附件会写入独立 COS，不再占用 CloudBase 文件存储。
+- 旧的 CloudBase 文件记录仍然兼容读取，后续可逐步清理。
+- COS 桶建议使用私有读，页面和小程序通过云函数生成签名地址访问。
+
 ## 小程序说明
 
 已完成的切换：
@@ -153,13 +171,57 @@
 ## 已完成的迁移项
 
 - 将后端主逻辑迁移到 `cloudfunctions/api/index.js`
-- 将数据存储从 SQLite / Postgres / Supabase 改为 CloudBase NoSQL + 云存储
+- 将数据存储从 SQLite / Postgres / Supabase 改为 CloudBase NoSQL + 独立 COS 附件存储
 - 将学生小程序请求链迁移到 `wx.cloud`
 - 将老师后台和学生 Web 演示迁移到 CloudBase Web SDK + 云函数
 - 将静态资源部署到 CloudBase Static Hosting
+- 为老师后台补充系统树详细设置面板，可查看知识点树/每周悬赏树的固定规则、阈值和系统节点明细
+
+## 系统树规则
+
+当前项目内置两棵系统树，都会在初始化阶段自动创建：
+
+- `C++知识点树`
+  - 固定 `systemKey`: `cpp_algorithm_tree`
+  - 用于学生等级结算
+  - 当带 `milestoneLevel` 的系统节点完成度达到 `80%` 时，学生升级到对应等级
+- `每周悬赏树`
+  - 固定 `systemKey`: `weekly_bounty_tree`
+  - 叶子任务点按 `requiredLevel` 与学生等级逐级解锁
+  - 当整棵树完成度达到 `80%` 时，学生获得 `+1` 积分，且每名学生只发放一次
+
+老师后台“系统树详细设置”面板和接口 `GET /api/system-tree-settings` 都直接读取这套后端规则，而不是前端单独维护说明文本。
 
 ## 当前边界
 
 - 老师账号仍然是单管理员模式，没有老师 CRUD 页面
 - `server.js`、`vercel.json`、`scripts/deploy-vercel.sh` 等旧文件还在仓库中，但已不属于 CloudBase 正式链路
 - 如需彻底清理旧技术栈，可以继续删掉 Express / Supabase / Vercel 相关文件和依赖
+
+## 本地冒烟调试
+
+如需对本地 Express 参考服务做快速回归，可先启动服务：
+
+```bash
+npm run dev
+```
+
+然后运行：
+
+```bash
+SMOKE_TEACHER_TOKEN=... npm run smoke:local
+```
+
+或使用真实老师账号：
+
+```bash
+SMOKE_TEACHER_USERNAME=... SMOKE_TEACHER_PASSWORD=... npm run smoke:local
+```
+
+脚本会自动验证：
+
+- 老师端健康检查与系统树设置接口
+- 创建临时学生并登录
+- 知识点树提交/批改后升级
+- 每周悬赏树提交/批改后积分到账
+- 调试结束后自动删除临时学生
