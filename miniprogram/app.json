@@ -2,6 +2,7 @@
   "pages": [
     "pages/login/login",
     "pages/trees/trees",
+    "pages/pdf-viewer/pdf-viewer",
     "pages/rewards/rewards",
     "pages/pet/pet"
   ],

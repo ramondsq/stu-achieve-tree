@@ -1,0 +1,6 @@
+<web-view wx:if="{{viewerUrl}}" src="{{viewerUrl}}"></web-view>
+
+<view wx:else class="pdf-viewer-error">
+  <view class="pdf-viewer-error-title">无法打开作业 PDF</view>
+  <view class="pdf-viewer-error-copy">{{errorText || '缺少预览地址'}}</view>
+</view>

@@ -29,6 +29,7 @@ App({
 
   globalData: {
     envId: 'cloud1-7gu74gqqd2913ea4',
+    pdfViewerBaseUrl: 'https://cloud1-7gu74gqqd2913ea4-1408652187.tcloudbaseapp.com/pdf-viewer.html',
     currentStartupTip: null,
     startupOverlayPending: false,
     rewardCenterDirty: false,

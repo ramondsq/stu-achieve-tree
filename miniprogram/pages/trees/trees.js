@@ -1040,6 +1040,70 @@ function downloadRemoteFile(url) {
   });
 }
 
+function downloadCloudFile(fileId) {
+  return new Promise((resolve, reject) => {
+    wx.cloud.downloadFile({
+      fileID: fileId,
+      success: resolve,
+      fail: reject,
+    });
+  });
+}
+
+async function resolveProblemAttachmentDownloadFileId(nodeId, attachment = {}) {
+  const rawFileId = String(attachment.fileId || '').trim();
+  if (!rawFileId) {
+    return '';
+  }
+  if (rawFileId.startsWith('cloud://')) {
+    return rawFileId;
+  }
+
+  const result = await request('/api/student/problem-attachments/download-file', {
+    method: 'POST',
+    data: {
+      nodeId,
+      fileId: rawFileId,
+    },
+  });
+  return String(result.fileId || '').trim();
+}
+
+async function downloadProblemAttachmentFile(nodeId, attachment = {}) {
+  const downloadFileId = await resolveProblemAttachmentDownloadFileId(nodeId, attachment);
+  if (downloadFileId) {
+    return downloadCloudFile(downloadFileId);
+  }
+  if (!attachment.url) {
+    throw new Error('题目资料下载地址不存在');
+  }
+  return downloadRemoteFile(attachment.url);
+}
+
+async function resolveProblemAttachmentPreviewInfo(nodeId, attachment = {}) {
+  const rawFileId = String(attachment.fileId || '').trim();
+  if (rawFileId) {
+    const result = await request('/api/student/problem-attachments/preview-url', {
+      method: 'POST',
+      data: {
+        nodeId,
+        fileId: rawFileId,
+      },
+    });
+    return {
+      url: String(result.url || '').trim(),
+      fileName: String(result.fileName || attachment.fileName || '题目资料.pdf').trim() || '题目资料.pdf',
+      mimeType: String(result.mimeType || attachment.mimeType || '').trim(),
+    };
+  }
+
+  return {
+    url: String(attachment.url || '').trim(),
+    fileName: String(attachment.fileName || '题目资料.pdf').trim() || '题目资料.pdf',
+    mimeType: String(attachment.mimeType || '').trim(),
+  };
+}
+
 function openLocalDocument(filePath, fileType = 'pdf') {
   return new Promise((resolve, reject) => {
     wx.openDocument({
@@ -3454,7 +3518,7 @@ Page({
     const attachment = located && Array.isArray(located.node.problemAttachments)
       ? located.node.problemAttachments[attachmentIndex]
       : null;
-    if (!located || !attachment || !attachment.url) {
+    if (!located || !attachment || (!attachment.url && !attachment.fileId)) {
       return;
     }
 
@@ -3468,11 +3532,27 @@ Page({
         return;
       }
 
-      const downloaded = await downloadRemoteFile(attachment.url);
-      await openLocalDocument(downloaded.tempFilePath, 'pdf');
+      wx.showLoading({
+        title: '加载预览',
+        mask: true,
+      });
+      const previewInfo = await resolveProblemAttachmentPreviewInfo(located.node.id, attachment);
+      const previewUrl = String(previewInfo.url || '').trim();
+      if (!previewUrl) {
+        throw new Error('题目预览地址不存在');
+      }
+      await new Promise((resolve, reject) => {
+        wx.navigateTo({
+          url: `/pages/pdf-viewer/pdf-viewer?file=${encodeURIComponent(previewUrl)}&name=${encodeURIComponent(previewInfo.fileName || attachment.fileName || '题目资料.pdf')}`,
+          success: resolve,
+          fail: reject,
+        });
+      });
     } catch (err) {
       const msg = String((err && (err.errMsg || err.message)) || '打开题目资料失败');
       this.setData({ errorText: msg });
+    } finally {
+      wx.hideLoading();
     }
   },
 
@@ -3482,13 +3562,18 @@ Page({
     const attachment = located && Array.isArray(located.node.problemAttachments)
       ? located.node.problemAttachments[attachmentIndex]
       : null;
-    if (!located || !attachment || !attachment.url) {
+    if (!located || !attachment || (!attachment.url && !attachment.fileId)) {
       return;
     }
 
     try {
       this.setData({ errorText: '' });
-      const downloaded = await downloadRemoteFile(attachment.url);
+      const documentType = inferDocumentFileType(attachment.fileName, attachment.mimeType) || 'pdf';
+      wx.showLoading({
+        title: '保存中',
+        mask: true,
+      });
+      const downloaded = await downloadProblemAttachmentFile(located.node.id, attachment);
       if (attachment.kind === 'image') {
         await saveImageToAlbum(downloaded.tempFilePath);
         wx.showToast({ title: '题图已保存', icon: 'success' });
@@ -3497,19 +3582,21 @@ Page({
 
       const saved = await saveTempFile(downloaded.tempFilePath);
       const reopen = await this.confirmAction({
-        title: 'PDF 已保存',
-        content: '题目 PDF 已保存到小程序本地文件，是否立即打开？',
+        title: '题目资料已保存',
+        content: '题目资料已保存到小程序本地文件，是否立即打开？',
         confirmText: '打开',
         cancelText: '关闭',
       });
       if (reopen) {
-        await openLocalDocument(saved.savedFilePath || downloaded.tempFilePath, 'pdf');
+        await openLocalDocument(saved.savedFilePath || downloaded.tempFilePath, documentType);
       } else {
-        wx.showToast({ title: 'PDF 已保存', icon: 'success' });
+        wx.showToast({ title: '题目资料已保存', icon: 'success' });
       }
     } catch (err) {
       const msg = String((err && (err.errMsg || err.message)) || '保存题目资料失败');
       this.setData({ errorText: msg });
+    } finally {
+      wx.hideLoading();
     }
   },
 

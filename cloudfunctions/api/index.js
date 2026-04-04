@@ -45,6 +45,7 @@ const APP_SECRET = process.env.APP_SECRET || 'cloudbase-dev-secret-change-me';
 const CODE_IMAGE_PREFIX = 'student-code';
 const SUBMISSION_FILE_PREFIX = 'student-submissions';
 const PROBLEM_ATTACHMENT_PREFIX = 'node-problems';
+const MINIPROGRAM_DOWNLOAD_PROXY_PREFIX = 'miniprogram-download-proxy';
 const PET_FRAME_PREFIX = 'pet-frames';
 const UNBOUND_WECHAT_OPENID_PREFIX = '__UNBOUND__::';
 const SPECIAL_TREE_KEYS = {
@@ -299,6 +300,134 @@ async function getCosFileUrl(file) {
     Expires: COS_URL_EXPIRES_SECONDS,
   });
   return String(data.Url || '').trim();
+}
+
+function normalizeBinaryBuffer(content) {
+  if (!content) {
+    return Buffer.alloc(0);
+  }
+  if (Buffer.isBuffer(content)) {
+    return content;
+  }
+  if (content instanceof Uint8Array) {
+    return Buffer.from(content);
+  }
+  if (ArrayBuffer.isView(content)) {
+    return Buffer.from(content.buffer, content.byteOffset, content.byteLength);
+  }
+  if (content instanceof ArrayBuffer) {
+    return Buffer.from(content);
+  }
+  if (typeof content === 'string') {
+    return Buffer.from(content);
+  }
+  return Buffer.alloc(0);
+}
+
+async function downloadStoredFileBuffer(file) {
+  const normalized = normalizeStoredFileReference(file);
+  if (!normalized) {
+    throw new AppError(404, '附件不存在');
+  }
+
+  if (normalized.storage_provider === STORAGE_PROVIDERS.cos) {
+    const data = await callCos('getObject', {
+      Bucket: normalized.cos_bucket,
+      Region: normalized.cos_region,
+      Key: normalized.cos_key,
+    });
+    const buffer = normalizeBinaryBuffer(data.Body);
+    if (!buffer.length) {
+      throw new AppError(500, '附件内容为空');
+    }
+    return buffer;
+  }
+
+  const { fileContent } = await cloud.downloadFile({
+    fileID: normalized.file_id,
+  });
+  const buffer = normalizeBinaryBuffer(fileContent);
+  if (!buffer.length) {
+    throw new AppError(500, '附件内容为空');
+  }
+  return buffer;
+}
+
+async function uploadBufferToCloudbase(cloudPath, buffer) {
+  const { fileID = '' } = await cloud.uploadFile({
+    cloudPath,
+    fileContent: buffer,
+  });
+  return String(fileID || '').trim();
+}
+
+function getStoredFileDownloadName(file, fallback = 'attachment.bin') {
+  const normalized = normalizeStoredFileReference(file);
+  if (!normalized) {
+    return fallback;
+  }
+
+  const rawFileName = String(normalized.file_name || fallback).trim() || fallback;
+  const mimeType = String(normalized.mime_type || inferSubmissionMimeType(rawFileName) || '').trim().toLowerCase();
+  const extByMime = {
+    'application/pdf': 'pdf',
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+    'image/bmp': 'bmp',
+    'image/svg+xml': 'svg',
+    'text/plain': 'txt',
+    'text/markdown': 'md',
+    'application/json': 'json',
+    'application/msword': 'doc',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+    'application/vnd.ms-excel': 'xls',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+    'application/vnd.ms-powerpoint': 'ppt',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+    'application/zip': 'zip',
+    'application/vnd.rar': 'rar',
+    'application/x-7z-compressed': '7z',
+  };
+  const fallbackExt = getFileExtensionFromName(rawFileName) || extByMime[mimeType] || 'bin';
+  return sanitizeStoredFileName(rawFileName, 'attachment', fallbackExt);
+}
+
+function buildMiniProgramDownloadProxyPath(file, scope = 'attachment') {
+  const normalized = normalizeStoredFileReference(file);
+  if (!normalized) {
+    return '';
+  }
+
+  const safeScope = String(scope || 'attachment')
+    .replace(/[^a-zA-Z0-9/_-]+/g, '_')
+    .replace(/^\/+|\/+$/g, '') || 'attachment';
+  const safeFileName = getStoredFileDownloadName(normalized);
+  const hash = crypto
+    .createHash('md5')
+    .update(String(normalized.file_id || ''))
+    .digest('hex');
+  return `${MINIPROGRAM_DOWNLOAD_PROXY_PREFIX}/${safeScope}/${hash}-${safeFileName}`;
+}
+
+async function ensureMiniProgramDownloadFileId(file, scope = 'attachment') {
+  const normalized = normalizeStoredFileReference(file);
+  if (!normalized) {
+    throw new AppError(404, '附件不存在');
+  }
+  if (normalized.storage_provider === STORAGE_PROVIDERS.cloudbase) {
+    return normalized.file_id;
+  }
+
+  const buffer = await downloadStoredFileBuffer(normalized);
+  const cloudPath = buildMiniProgramDownloadProxyPath(normalized, scope);
+  const fileID = await uploadBufferToCloudbase(cloudPath, buffer);
+  if (!fileID) {
+    throw new AppError(500, '生成小程序下载文件失败');
+  }
+  return fileID;
 }
 
 async function deleteCosFiles(files = []) {
@@ -4713,6 +4842,61 @@ async function handleStudentTrees(request) {
     });
 }
 
+async function handleStudentProblemAttachmentDownloadFile(request) {
+  await resolveStudentByTokenOrOpenId(request);
+
+  const nodeId = normalizeRequiredId(request.body.nodeId, 'nodeId');
+  const fileId = normalizeString(request.body.fileId, 'fileId', { required: true, maxLength: 500 });
+  const node = await getDocById(COLLECTIONS.nodes, nodeId);
+  if (!node) {
+    throw new AppError(404, '节点不存在');
+  }
+
+  const attachment = getStoredProblemAttachments(node)
+    .find((item) => String(item.file_id || '').trim() === fileId);
+  if (!attachment) {
+    throw new AppError(404, '题目资料不存在');
+  }
+
+  return {
+    fileId: await ensureMiniProgramDownloadFileId(attachment, `problem-attachments/${nodeId}`),
+    fileName: attachment.file_name || 'attachment',
+    mimeType: attachment.mime_type || inferSubmissionMimeType(attachment.file_name || '') || '',
+  };
+}
+
+async function handleStudentProblemAttachmentPreviewUrl(request) {
+  await resolveStudentByTokenOrOpenId(request);
+
+  const nodeId = normalizeRequiredId(request.body.nodeId, 'nodeId');
+  const fileId = normalizeString(request.body.fileId, 'fileId', { required: true, maxLength: 500 });
+  const node = await getDocById(COLLECTIONS.nodes, nodeId);
+  if (!node) {
+    throw new AppError(404, '节点不存在');
+  }
+
+  const attachment = getStoredProblemAttachments(node)
+    .find((item) => String(item.file_id || '').trim() === fileId);
+  if (!attachment) {
+    throw new AppError(404, '题目资料不存在');
+  }
+
+  const downloadFileId = await ensureMiniProgramDownloadFileId(attachment, `problem-attachments/${nodeId}`);
+  const urlMap = await resolveCloudbaseTempFileUrlMap([downloadFileId]);
+  const url = String(urlMap.get(downloadFileId) || '').trim();
+  if (!url) {
+    throw new AppError(500, '生成题目预览地址失败');
+  }
+
+  return {
+    url,
+    fileId: downloadFileId,
+    fileName: attachment.file_name || 'attachment',
+    mimeType: attachment.mime_type || inferSubmissionMimeType(attachment.file_name || '') || '',
+    kind: getProblemAttachmentKindFromMimeType(attachment.mime_type || ''),
+  };
+}
+
 async function handleStudentRewardCenter(request) {
   const student = await resolveStudentByTokenOrOpenId(request);
   const syncedStudent = await syncStudentMilestones(student._id) || student;
@@ -5215,6 +5399,12 @@ async function executeRequest(request) {
   }
   if (method === 'GET' && path === '/student/trees') {
     return handleStudentTrees(request);
+  }
+  if (method === 'POST' && path === '/student/problem-attachments/download-file') {
+    return handleStudentProblemAttachmentDownloadFile(request);
+  }
+  if (method === 'POST' && path === '/student/problem-attachments/preview-url') {
+    return handleStudentProblemAttachmentPreviewUrl(request);
   }
   if (method === 'GET' && path === '/student/reward-center') {
     return handleStudentRewardCenter(request);

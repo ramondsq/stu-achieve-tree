@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>作业 PDF 预览</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #eef3fb;
+        --panel: rgba(255, 255, 255, 0.92);
+        --text: #172033;
+        --muted: #63708a;
+        --accent: #2459d6;
+        --shadow: 0 18px 48px rgba(19, 39, 86, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(36, 89, 214, 0.14), transparent 34%),
+          linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .page {
+        min-height: 100vh;
+        padding: 16px 12px 24px;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 0 auto 16px;
+        padding: 14px 16px;
+        max-width: 980px;
+        border-radius: 18px;
+        background: var(--panel);
+        backdrop-filter: blur(14px);
+        box-shadow: var(--shadow);
+      }
+
+      .title {
+        min-width: 0;
+      }
+
+      .title-label {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .title-text {
+        margin-top: 6px;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.4;
+        word-break: break-all;
+      }
+
+      .status {
+        flex-shrink: 0;
+        font-size: 13px;
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      .error {
+        display: none;
+        max-width: 980px;
+        margin: 16px auto;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: rgba(194, 48, 48, 0.1);
+        color: #9f1f1f;
+        line-height: 1.7;
+        box-shadow: var(--shadow);
+      }
+
+      .pages {
+        max-width: 980px;
+        margin: 0 auto;
+      }
+
+      .page-card {
+        margin: 0 auto 16px;
+        padding: 12px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.88);
+        box-shadow: var(--shadow);
+      }
+
+      .page-index {
+        margin-bottom: 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      @media (min-width: 768px) {
+        .page {
+          padding: 20px 18px 36px;
+        }
+
+        .topbar {
+          padding: 16px 20px;
+        }
+
+        .title-text {
+          font-size: 18px;
+        }
+
+        .page-card {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="topbar">
+        <div class="title">
+          <div class="title-label">Assignment PDF</div>
+          <div id="titleText" class="title-text">作业 PDF</div>
+        </div>
+        <div id="statusText" class="status">准备中</div>
+      </div>
+      <div id="errorBox" class="error"></div>
+      <div id="pages" class="pages"></div>
+    </div>
+
+    <script src="./vendor/pdfjs/pdf.min.js"></script>
+    <script>
+      (function initPdfViewer() {
+        const params = new URLSearchParams(window.location.search);
+        const pdfUrl = String(params.get('file') || '').trim();
+        const fileName = String(params.get('name') || '作业.pdf').trim() || '作业.pdf';
+        const titleEl = document.getElementById('titleText');
+        const statusEl = document.getElementById('statusText');
+        const errorBox = document.getElementById('errorBox');
+        const pagesEl = document.getElementById('pages');
+        const devicePixelRatio = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+
+        titleEl.textContent = fileName;
+
+        function showError(message) {
+          errorBox.style.display = 'block';
+          errorBox.textContent = message;
+          statusEl.textContent = '加载失败';
+        }
+
+        function setStatus(message) {
+          statusEl.textContent = message;
+        }
+
+        async function renderPage(pdf, pageNumber) {
+          const page = await pdf.getPage(pageNumber);
+          const wrapper = document.createElement('section');
+          wrapper.className = 'page-card';
+
+          const indexEl = document.createElement('div');
+          indexEl.className = 'page-index';
+          indexEl.textContent = `第 ${pageNumber} / ${pdf.numPages} 页`;
+          wrapper.appendChild(indexEl);
+
+          const canvas = document.createElement('canvas');
+          wrapper.appendChild(canvas);
+          pagesEl.appendChild(wrapper);
+
+          const baseViewport = page.getViewport({ scale: 1 });
+          const targetWidth = Math.max(280, Math.min(960, pagesEl.clientWidth - 24));
+          const scale = targetWidth / baseViewport.width;
+          const viewport = page.getViewport({ scale });
+          const context = canvas.getContext('2d', { alpha: false });
+
+          canvas.width = Math.floor(viewport.width * devicePixelRatio);
+          canvas.height = Math.floor(viewport.height * devicePixelRatio);
+          canvas.style.width = `${Math.floor(viewport.width)}px`;
+          canvas.style.height = `${Math.floor(viewport.height)}px`;
+          context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+
+          await page.render({
+            canvasContext: context,
+            viewport,
+          }).promise;
+        }
+
+        async function renderPdf() {
+          if (!pdfUrl) {
+            showError('缺少 PDF 地址，无法预览。');
+            return;
+          }
+          if (!window['pdfjs-dist/build/pdf']) {
+            showError('PDF 预览脚本加载失败。');
+            return;
+          }
+
+          const pdfjsLib = window['pdfjs-dist/build/pdf'];
+          pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdfjs/pdf.worker.min.js';
+
+          try {
+            setStatus('加载 PDF');
+            const task = pdfjsLib.getDocument({
+              url: pdfUrl,
+              withCredentials: false,
+            });
+            const pdf = await task.promise;
+            setStatus(`共 ${pdf.numPages} 页`);
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+              setStatus(`渲染第 ${pageNumber} / ${pdf.numPages} 页`);
+              await renderPage(pdf, pageNumber);
+            }
+            setStatus(`已完成 · ${pdf.numPages} 页`);
+          } catch (error) {
+            const message = error && error.message
+              ? error.message
+              : 'PDF 加载失败，请稍后重试。';
+            showError(message);
+          }
+        }
+
+        renderPdf();
+      })();
+    </script>
+  </body>
+</html>
