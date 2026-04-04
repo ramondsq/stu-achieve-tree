@@ -12,6 +12,7 @@
     "achv_learning_trees",
     "achv_knowledge_nodes",
     "achv_student_scores",
-    "achv_student_node_submissions"
+    "achv_student_node_submissions",
+    "achv_share_cards"
   ]
 }

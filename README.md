@@ -1,10 +1,10 @@
 # 学习进度成就树系统
 
-当前项目已迁移为微信云开发 CloudBase 架构，不再依赖 Vercel、Supabase 或 Cloudflare Pages 作为正式部署方案。
+当前项目已迁移为微信云开发 CloudBase 架构，不再依赖 Vercel、Supabase、Cloudflare Pages，仓库中的旧本地 Express 参考链路也已移除。
 
 ## 当前部署架构
 
-- 静态网站托管：老师后台和学生 Web 演示页部署到 CloudBase Static Hosting
+- 静态网站托管：老师后台和学生 Web 演示页直接上传 `public/` 目录到 CloudBase Static Hosting
 - 云函数：`api`
 - 小程序端：`wx.cloud.callFunction` 调用 `api`
 - Web 端：CloudBase Web SDK 匿名登录后调用 `api`
@@ -24,10 +24,10 @@
   CloudBase 云函数主后端，承接老师后台、学生 Web、小程序的全部业务接口
 - `miniprogram/`
   微信小程序代码，已切换到 `wx.cloud`
+- `project.config.json`
+  微信开发者工具的唯一项目入口，统一映射 `miniprogram/` 和 `cloudfunctions/`
 - `public/`
-  静态托管页面
-- `server.js`
-  旧版 Express 服务，保留作历史参考，不再作为 CloudBase 正式部署入口
+  静态托管页面，直接作为 CloudBase Static Hosting 上传目录
 
 ## 数据集合
 
@@ -39,15 +39,22 @@
 - `achv_knowledge_nodes`
 - `achv_student_scores`
 - `achv_student_node_submissions`
+- `achv_share_cards`
 
-已创建的关键索引：
+当前建议保持的关键二级索引：
 
 - `achv_teachers.username_unique`
 - `achv_students.username_unique`
 - `achv_students.wechat_openid_unique`
 - `achv_knowledge_nodes.tree_parent_sort`
+- `achv_knowledge_nodes.parent_id`
 - `achv_student_scores.student_node_unique`
 - `achv_student_node_submissions.student_node_submitted_at`
+
+补充说明：
+
+- `achv_knowledge_nodes.parent_id` 用于叶子节点校验等直接按 `parent_id` 查询的场景。
+- `achv_share_cards` 当前只通过文档 `_id` 读取详情，暂不依赖额外二级索引。
 
 权限策略：
 
@@ -122,6 +129,19 @@
 
 如果后续更换环境，需要同步修改这个文件并重新上传静态资源。
 
+## 环境切换同步点
+
+如果后续切换 CloudBase 环境，至少同步以下文件：
+
+- `cloudbaserc.json`
+  部署清单中的 `envId`、`region`、`hostingRoot`、云函数/集合列表
+- `public/cloudbase-config.js`
+  Web 端调用云函数所需的 `envId`、`region`、`publishableKey`
+- `miniprogram/app.js`
+  小程序 `wx.cloud.init` 使用的 `env`，以及 PDF 预览页静态托管地址
+- `README.md`
+  当前环境摘要、静态托管域名与 CloudBase 控制台入口
+
 ## COS 附件存储配置
 
 当前版本已经把题目附件和学生提交附件切到独立 COS，对应云函数 `api` 需要配置以下环境变量：
@@ -146,11 +166,13 @@
 - `miniprogram/app.js` 改为 `wx.cloud.init`
 - `miniprogram/utils/request.js` 改为 `wx.cloud.callFunction`
 - 登录页去掉 `wx.login` 依赖
-- `project.config.json` 已设置 `cloudfunctionRoot: "../cloudfunctions"`
+- 根目录 `project.config.json` 已设置：
+  - `miniprogramRoot: "miniprogram/"`
+  - `cloudfunctionRoot: "cloudfunctions/"`
 
 建议在微信开发者工具中执行：
 
-1. 导入 `miniprogram/`
+1. 导入仓库根目录
 2. 确认 AppID 正确
 3. 右键 `cloudfunctions/api`，执行“云端安装依赖”
 4. 如遇权限或依赖问题，再用开发者工具手动上传一次云函数
@@ -176,6 +198,9 @@
 - 将老师后台和学生 Web 演示迁移到 CloudBase Web SDK + 云函数
 - 将静态资源部署到 CloudBase Static Hosting
 - 为老师后台补充系统树详细设置面板，可查看知识点树/每周悬赏树的固定规则、阈值和系统节点明细
+- 清理旧的 Vercel / Cloudflare Pages 代理与部署脚本，收敛为 CloudBase 单一正式链路
+- 收敛微信开发者工具配置为根目录单一入口，避免 `project.config.json` 重复漂移
+- 移除根目录旧的 Express / Supabase / Postgres 本地参考链路与相关依赖清单
 
 ## 系统树规则
 
@@ -195,33 +220,4 @@
 ## 当前边界
 
 - 老师账号仍然是单管理员模式，没有老师 CRUD 页面
-- `server.js`、`vercel.json`、`scripts/deploy-vercel.sh` 等旧文件还在仓库中，但已不属于 CloudBase 正式链路
-- 如需彻底清理旧技术栈，可以继续删掉 Express / Supabase / Vercel 相关文件和依赖
-
-## 本地冒烟调试
-
-如需对本地 Express 参考服务做快速回归，可先启动服务：
-
-```bash
-npm run dev
-```
-
-然后运行：
-
-```bash
-SMOKE_TEACHER_TOKEN=... npm run smoke:local
-```
-
-或使用真实老师账号：
-
-```bash
-SMOKE_TEACHER_USERNAME=... SMOKE_TEACHER_PASSWORD=... npm run smoke:local
-```
-
-脚本会自动验证：
-
-- 老师端健康检查与系统树设置接口
-- 创建临时学生并登录
-- 知识点树提交/批改后升级
-- 每周悬赏树提交/批改后积分到账
-- 调试结束后自动删除临时学生
+- 当前仓库默认只维护 CloudBase 正式链路，若需要新的测试入口，建议直接围绕 `cloudfunctions/api` 或页面端补充测试

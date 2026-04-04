@@ -1,7 +1,12 @@
 node_modules/
-data/*.db
+cloudfunctions/**/node_modules/
+data/
+public/uploads/
 npm-debug.log*
 .DS_Store
+*.Zone.Identifier
 .env
 .env.local
 .env.production
+project.private.config.json
+miniprogram/project.private.config.json
