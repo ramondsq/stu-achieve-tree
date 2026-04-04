@@ -10,3 +10,4 @@ npm-debug.log*
 .env.production
 project.private.config.json
 miniprogram/project.private.config.json
+rules/
