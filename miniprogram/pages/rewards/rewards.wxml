@@ -1,0 +1,140 @@
+<view class="container page-shell reward-page">
+  <view class="card hero-card reward-hero card-accent card-accent-amber">
+    <view class="title">积分中心</view>
+    <view class="subtle">{{studentName}}</view>
+
+    <view wx:if="{{errorText}}" class="error">{{errorText}}</view>
+
+    <view class="reward-hero-summary">
+      <view class="reward-hero-points">{{rewardCenter.student.total_points}}</view>
+      <view class="reward-hero-copy">待领 {{rewardCenter.claimable_reward_count}} 份 · +{{rewardCenter.claimable_total_points}}</view>
+    </view>
+
+    <view class="stats-grid reward-top-stats">
+      <view class="stat-card stat-card-blue">
+        <view class="stat-label">等级</view>
+        <view class="stat-value">Lv.{{rewardCenter.student.level}}</view>
+      </view>
+      <view class="stat-card stat-card-teal">
+        <view class="stat-label">进度</view>
+        <view class="stat-value">{{rewardCenter.learning_progress.progress_percent}}%</view>
+      </view>
+      <view class="stat-card stat-card-green">
+        <view class="stat-label">可领</view>
+        <view class="stat-value">{{rewardCenter.claimable_reward_count}} 份</view>
+      </view>
+      <view class="stat-card stat-card-amber">
+        <view class="stat-label">待领积分</view>
+        <view class="stat-value">{{rewardCenter.claimable_total_points}}</view>
+      </view>
+    </view>
+
+    <view class="btn-row reward-hero-actions">
+      <button class="btn btn-tonal-blue" loading="{{loading}}" bindtap="handleRefresh">刷新</button>
+      <button class="btn btn-tonal-slate" bindtap="handleBack">返回</button>
+    </view>
+  </view>
+
+  <view class="card reward-section-card card-accent card-accent-slate">
+    <view class="section-tag section-tag-blue">宠物养成</view>
+    <view class="card-title">{{rewardCenter.pet_summary.title}}</view>
+    <view class="subtle">{{rewardCenter.pet_summary.summary_text}}</view>
+    <view class="reward-metric-row">
+      <view class="reward-metric">饱食 {{rewardCenter.pet_summary.hunger}}%</view>
+      <view class="reward-metric">健康 {{rewardCenter.pet_summary.health}}%</view>
+      <view class="reward-metric">心情 {{rewardCenter.pet_summary.mood}}%</view>
+    </view>
+    <view class="reward-claim-row">
+      <view class="reward-status-chip {{rewardCenter.pet_summary.illness_active ? 'is-claimable' : ''}}">{{rewardCenter.pet_summary.status_text}}</view>
+      <button class="btn reward-claim-btn btn-tonal-slate" bindtap="handleOpenPetPage">进入宠物</button>
+    </view>
+  </view>
+
+  <view class="card reward-section-card card-accent card-accent-teal">
+    <view class="section-tag section-tag-teal">本周作业树</view>
+    <view class="card-title">本周 2 道 8分+</view>
+    <view class="subtle">{{rewardCenter.weekly_bounty.week_label}} · {{rewardCenter.weekly_bounty.summary_text}}</view>
+    <view class="reward-progress-track">
+      <view class="reward-progress-fill reward-progress-fill-teal" style="width: {{rewardCenter.weekly_bounty.progress_percent}}%;"></view>
+    </view>
+    <view class="reward-metric-row">
+      <view class="reward-metric">进度 {{rewardCenter.weekly_bounty.qualified_count}} / {{rewardCenter.weekly_bounty.target_count}}</view>
+      <view class="reward-metric">积分 +{{rewardCenter.weekly_bounty.reward_points}}</view>
+    </view>
+    <view class="reward-claim-row">
+      <view class="reward-status-chip {{rewardCenter.weekly_bounty.claimable ? 'is-claimable' : ''}} {{rewardCenter.weekly_bounty.claimed ? 'is-claimed' : ''}}">{{rewardCenter.weekly_bounty.status_text}}</view>
+      <button class="btn reward-claim-btn btn-tonal-teal" data-claim-type="weekly_bounty" data-claim-key="weekly_bounty" bindtap="handleClaimReward" loading="{{claimWorking && claimWorkingKey === 'weekly_bounty'}}" disabled="{{!rewardCenter.weekly_bounty.claimable || claimWorking}}">{{rewardCenter.weekly_bounty.claimed ? '已领取' : '领取积分'}}
+      </button>
+    </view>
+  </view>
+
+  <view class="card reward-section-card card-accent card-accent-blue">
+    <view class="section-tag section-tag-blue">连续提交挑战</view>
+    <view class="card-title">本周连续提交 4分+</view>
+    <view class="subtle">{{rewardCenter.weekly_streak.summary_text}}</view>
+    <view class="reward-progress-track">
+      <view class="reward-progress-fill reward-progress-fill-blue" style="width: {{rewardCenter.weekly_streak.progress_percent}}%;"></view>
+    </view>
+    <view class="reward-metric-row">
+      <view class="reward-metric">当前连续 {{rewardCenter.weekly_streak.current_days}} / {{rewardCenter.weekly_streak.target_days}} 天</view>
+      <view class="reward-metric">积分 +{{rewardCenter.weekly_streak.reward_points}}</view>
+    </view>
+    <view class="reward-claim-row">
+      <view class="reward-status-chip {{rewardCenter.weekly_streak.claimable ? 'is-claimable' : ''}}">{{rewardCenter.weekly_streak.status_text}}</view>
+      <button class="btn reward-claim-btn btn-tonal-blue" data-claim-type="weekly_streak" data-claim-key="weekly_streak" bindtap="handleClaimReward" loading="{{claimWorking && claimWorkingKey === 'weekly_streak'}}" disabled="{{!rewardCenter.weekly_streak.claimable || claimWorking}}">{{rewardCenter.weekly_streak.claimable ? '领取积分' : '继续'}}
+      </button>
+    </view>
+  </view>
+
+  <view class="card reward-section-card card-accent card-accent-green">
+    <view class="section-tag section-tag-green">月度挑战</view>
+    <view class="card-title">本月连续提交 4分+</view>
+    <view class="subtle">{{rewardCenter.monthly_streak.summary_text}}</view>
+    <view class="reward-progress-track">
+      <view class="reward-progress-fill reward-progress-fill-green" style="width: {{rewardCenter.monthly_streak.progress_percent}}%;"></view>
+    </view>
+    <view class="reward-metric-row">
+      <view class="reward-metric">当前连续 {{rewardCenter.monthly_streak.current_days}} / {{rewardCenter.monthly_streak.target_days}} 天</view>
+      <view class="reward-metric">积分 +{{rewardCenter.monthly_streak.reward_points}}</view>
+    </view>
+    <view class="reward-claim-row">
+      <view class="reward-status-chip {{rewardCenter.monthly_streak.claimable ? 'is-claimable' : ''}}">{{rewardCenter.monthly_streak.status_text}}</view>
+      <button class="btn reward-claim-btn btn-tonal-green" data-claim-type="monthly_streak" data-claim-key="monthly_streak" bindtap="handleClaimReward" loading="{{claimWorking && claimWorkingKey === 'monthly_streak'}}" disabled="{{!rewardCenter.monthly_streak.claimable || claimWorking}}">{{rewardCenter.monthly_streak.claimable ? '领取积分' : '继续'}}
+      </button>
+    </view>
+  </view>
+
+  <view class="card reward-section-card card-accent card-accent-amber">
+    <view class="section-tag section-tag-amber">等级积分</view>
+    <view class="card-title">等级达成</view>
+    <view class="subtle">Lv.{{rewardCenter.level_rewards.current_level}} · 待领 {{rewardCenter.level_rewards.claimable_count}} 份 · +{{rewardCenter.level_rewards.total_claimable_points}}</view>
+
+    <block wx:for="{{rewardCenter.level_rewards.items}}" wx:key="key" wx:for-item="item">
+      <view class="reward-level-item {{item.claimable ? 'is-claimable' : ''}} {{item.claimed ? 'is-claimed' : ''}} {{!item.reached ? 'is-locked' : ''}}">
+        <view class="reward-level-copy">
+          <view class="reward-level-title">{{item.title}}</view>
+          <view class="subtle">{{item.subtitle}}</view>
+        </view>
+        <view class="reward-level-side">
+          <view class="reward-level-points">+{{item.reward_points}}</view>
+          <button wx:if="{{item.reached}}" class="btn reward-claim-btn {{item.claimable ? 'btn-tonal-amber' : 'btn-tonal-slate'}} mini-btn" data-claim-type="level" data-claim-key="{{item.key}}" data-level="{{item.level}}" bindtap="handleClaimReward" loading="{{claimWorking && claimWorkingKey === item.key}}" disabled="{{!item.claimable || claimWorking}}">{{item.button_text}}</button>
+          <button wx:else class="btn btn-tonal-slate mini-btn" disabled>未解锁</button>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view wx:if="{{claimOverlayVisible}}" class="claim-overlay">
+    <view class="claim-overlay-backdrop" bindtap="handleCloseClaimOverlay"></view>
+    <view class="claim-overlay-card">
+      <block wx:for="{{claimOverlayParticles}}" wx:key="*this" wx:for-index="particleIndex">
+        <view class="claim-overlay-particle particle-{{particleIndex}}"></view>
+      </block>
+      <view class="claim-overlay-orb"></view>
+      <view class="claim-overlay-points">{{claimOverlayPointsText}}</view>
+      <view class="claim-overlay-title">{{claimOverlayTitle}}</view>
+      <view class="claim-overlay-copy">{{claimOverlayCopy}}</view>
+      <button class="btn btn-tonal-amber" bindtap="handleCloseClaimOverlay">继续</button>
+    </view>
+  </view>
+</view>

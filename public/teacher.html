@@ -4,15 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>老师后台 - 学习进度成就树</title>
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div class="container">
-      <h1>老师后台 - 学习进度成就树</h1>
-      <div id="notice"></div>
+    <div class="container page-shell">
+      <header class="page-hero">
+        <div>
+          <h1>老师后台</h1>
+          <p class="hero-copy">
+            将学生、学习树、节点和评分拆成独立工作区，关键操作会即时反馈。
+          </p>
+        </div>
+        <div class="hero-actions">
+          <a class="ghost-link" href="./student.html">查看学生端</a>
+          <span class="entity-pill readonly">CloudBase 静态页</span>
+        </div>
+      </header>
 
-      <section id="loginSection" class="panel">
-        <h2>老师登录</h2>
+      <div id="notice" class="notice-slot" aria-live="polite"></div>
+
+      <section id="loginSection" class="panel auth-panel auth-panel--compact">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">老师登录</h2>
+            <p class="section-copy">登录后即可管理学生、章节和评分。</p>
+          </div>
+        </div>
         <form id="loginForm">
           <label for="loginUsername">用户名</label>
           <input id="loginUsername" name="username" required />
@@ -20,26 +37,135 @@
           <label for="loginPassword">密码</label>
           <input id="loginPassword" name="password" type="password" required />
 
-          <div class="inline" style="margin-top: 10px">
+          <div class="form-actions">
             <button class="primary" type="submit">登录</button>
           </div>
         </form>
       </section>
 
       <section id="dashboardSection" hidden>
-        <div class="panel toolbar">
-          <div>
-            <strong>当前老师：</strong><span id="teacherName"></span>
+        <div class="panel">
+          <div class="teacher-toolbar">
+            <div>
+              <h2 class="section-title">教学管理工作台</h2>
+              <div class="teacher-toolbar-meta">
+                当前老师：<strong id="teacherName"></strong>
+              </div>
+            </div>
+            <div class="actions">
+              <button id="refreshAllBtn" type="button">刷新数据</button>
+              <button id="logoutBtn" type="button" class="danger">退出登录</button>
+            </div>
           </div>
-          <div class="actions">
-            <button id="refreshAllBtn">刷新数据</button>
-            <button id="logoutBtn" class="danger">退出登录</button>
+
+          <div class="stats-row">
+            <div class="summary-card">
+              <div class="summary-label">学生总数</div>
+              <div id="summaryStudentCount" class="summary-value">0</div>
+              <div class="summary-meta">全部账号</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">自定义学习树</div>
+              <div id="summaryCustomTreeCount" class="summary-value">0</div>
+              <div class="summary-meta">可新增与删除</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">系统树</div>
+              <div id="summarySystemTreeCount" class="summary-value">0</div>
+              <div class="summary-meta">系统规则入口</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">当前选中节点数</div>
+              <div id="summarySelectedNodeCount" class="summary-value">0</div>
+              <div id="summarySelectedTreeMeta" class="summary-meta">尚未选择学习树</div>
+            </div>
           </div>
         </div>
 
-        <div class="grid">
+        <div class="panel">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">工作区切换</h2>
+              <p class="section-copy">按任务切换当前工作区。</p>
+            </div>
+          </div>
+          <div class="tab-bar">
+            <button class="tab-button active" type="button" data-view-target="overview">总览</button>
+            <button class="tab-button" type="button" data-view-target="students">学生管理</button>
+            <button class="tab-button" type="button" data-view-target="trees">学习树管理</button>
+            <button class="tab-button" type="button" data-view-target="nodes">节点管理</button>
+            <button class="tab-button" type="button" data-view-target="scores">评分管理</button>
+          </div>
+        </div>
+
+        <div class="dashboard-view active" data-view="overview">
+          <div class="overview-grid">
+            <section class="panel selection-card">
+              <div>
+                <h2 class="section-title">当前工作上下文</h2>
+                <div id="overviewSelectedTreeName" class="selected-tree-name">尚未选择学习树</div>
+                <div id="overviewSelectedTreeDesc" class="selected-tree-desc">
+                  请先在“学习树管理”里选择当前章节。
+                </div>
+                <div id="overviewSelectedTreeMeta" class="badge-row">
+                  <span class="entity-pill readonly">未建立上下文</span>
+                </div>
+              </div>
+              <div class="quick-actions">
+                <button type="button" class="primary" data-nav-view="students">学生</button>
+                <button type="button" data-nav-view="trees">学习树</button>
+                <button type="button" data-nav-view="nodes">节点</button>
+                <button type="button" data-nav-view="scores">评分</button>
+              </div>
+            </section>
+
+            <section class="panel info-panel">
+              <div class="section-header">
+                <div>
+                  <h2 class="section-title">使用建议</h2>
+                  <p class="section-copy">按顺序处理高频操作。</p>
+                </div>
+              </div>
+              <div class="feature-list">
+                <div class="feature-item">
+                  <strong>先建学生</strong>
+                  <div class="small">新增后可直接去评分区检查记录。</div>
+                </div>
+                <div class="feature-item">
+                  <strong>先选学习树</strong>
+                  <div class="small">节点区会围绕当前学习树展开。</div>
+                </div>
+                <div class="feature-item">
+                  <strong>系统树集中查看</strong>
+                  <div class="small">系统规则集中展示，减少干扰。</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
           <section class="panel">
-            <h2>学生管理</h2>
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">系统树设置</h2>
+                <p class="section-copy">
+                  查看“知识点树”和“每周悬赏树”的规则。
+                </p>
+              </div>
+            </div>
+            <div id="systemTreeSettingsContainer" class="system-tree-settings-list">
+              <div class="small">登录后自动加载系统树设置。</div>
+            </div>
+          </section>
+        </div>
+
+        <div class="dashboard-view" data-view="students" hidden>
+          <section class="panel">
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">学生管理</h2>
+                <p class="section-copy">创建学生后可手动调整等级和积分。</p>
+              </div>
+            </div>
             <form id="studentForm">
               <div class="inline">
                 <div>
@@ -53,29 +179,97 @@
               </div>
               <label for="studentPassword">初始密码</label>
               <input id="studentPassword" type="password" required />
-              <div style="margin-top: 10px">
+              <div class="small" style="margin-top: 8px;">新学生默认从 0 级、0 积分开始。</div>
+              <div class="form-actions">
                 <button class="primary" type="submit">新增学生</button>
               </div>
             </form>
 
-            <div style="margin-top: 14px; overflow: auto">
+            <div class="section-header" style="margin-top: 20px; align-items: end; gap: 12px;">
+              <div>
+                <h3 class="section-title" style="margin-bottom: 6px;">学生列表</h3>
+                <p id="studentSearchSummary" class="section-copy">登录后自动加载。</p>
+              </div>
+              <div class="form-actions" style="margin-left: auto;">
+                <input id="studentSearchInput" type="search" placeholder="按用户名 / 姓名 / ID 查找" style="min-width: 260px;" />
+                <button id="clearStudentSearchBtn" type="button">清空筛选</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>ID</th>
                     <th>用户名</th>
                     <th>姓名</th>
-                    <th>微信绑定</th>
+                    <th>等级</th>
+                    <th>累计积分</th>
+                    <th>微信状态</th>
                     <th>操作</th>
                   </tr>
                 </thead>
                 <tbody id="studentsTbody"></tbody>
               </table>
             </div>
-          </section>
 
+            <div id="studentPetFrameEditor" class="student-pet-editor" hidden>
+              <div class="section-header">
+                <div>
+                  <h3 class="section-title" style="margin-bottom: 6px;">宠物帧序列</h3>
+                  <p id="studentPetFrameSummary" class="section-copy">选择一个学生后，再分别上传四种状态的帧序列。</p>
+                </div>
+                <div class="actions">
+                  <button id="closeStudentPetEditorBtn" type="button">收起</button>
+                </div>
+              </div>
+
+              <div id="studentPetStateTabs" class="pet-frame-tabs"></div>
+              <div id="studentPetStateLabel" class="entity-pill readonly" style="margin-top: 12px;">当前未选择状态</div>
+              <div id="studentPetStateHint" class="small" style="margin-top: 8px;">当前状态还没有已保存帧。</div>
+
+              <div id="studentPetFrameSummaryGrid" class="pet-frame-summary-grid" style="margin-top: 14px;"></div>
+
+              <div style="margin-top: 16px;">
+                <label for="studentPetFrameFiles">为当前状态追加帧</label>
+                <input id="studentPetFrameFiles" type="file" multiple accept="image/png,image/jpeg,image/webp" />
+                <div class="small" style="margin-top: 6px;">仅支持 PNG / JPEG / WEBP。帧顺序会按列表顺序播放，可在下方上移或下移。</div>
+              </div>
+
+              <div class="section-header" style="margin-top: 18px;">
+                <div>
+                  <h4 class="section-title" style="margin-bottom: 6px;">已保存帧</h4>
+                  <p id="studentPetExistingSummary" class="section-copy">当前没有已保存的帧。</p>
+                </div>
+              </div>
+              <div id="studentPetExistingList" class="pet-frame-grid"></div>
+
+              <div class="section-header" style="margin-top: 18px;">
+                <div>
+                  <h4 class="section-title" style="margin-bottom: 6px;">待上传帧</h4>
+                  <p id="studentPetPendingSummary" class="section-copy">当前没有待上传的新帧。</p>
+                </div>
+                <div class="form-actions" style="margin-left: auto;">
+                  <button id="clearStudentPetPendingBtn" type="button" hidden>清空待上传</button>
+                </div>
+              </div>
+              <div id="studentPetPendingList" class="pet-frame-grid"></div>
+
+              <div class="form-actions" style="margin-top: 18px;">
+                <button id="saveStudentPetFramesBtn" type="button" class="primary">保存当前状态帧</button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="dashboard-view" data-view="trees" hidden>
           <section class="panel">
-            <h2>学习树管理</h2>
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">学习树管理</h2>
+                <p class="section-copy">在这里创建和切换章节树。</p>
+              </div>
+            </div>
             <form id="treeForm">
               <label for="treeTitle">章节标题</label>
               <input id="treeTitle" required />
@@ -86,12 +280,23 @@
               <label for="treeDesc">章节描述</label>
               <textarea id="treeDesc"></textarea>
 
-              <div style="margin-top: 10px">
+              <div class="form-actions">
                 <button class="primary" type="submit">新增学习树</button>
               </div>
             </form>
 
-            <div style="margin-top: 14px; overflow: auto">
+            <div class="section-header" style="margin-top: 20px; align-items: end; gap: 12px;">
+              <div>
+                <h3 class="section-title" style="margin-bottom: 6px;">学习树列表</h3>
+                <p id="treeSearchSummary" class="section-copy">登录后自动加载。</p>
+              </div>
+              <div class="form-actions" style="margin-left: auto;">
+                <input id="treeSearchInput" type="search" placeholder="按章节标题查找" style="min-width: 240px;" />
+                <button id="clearTreeSearchBtn" type="button">清空筛选</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
@@ -105,37 +310,135 @@
               </table>
             </div>
           </section>
+        </div>
+
+        <div class="dashboard-view" data-view="nodes" hidden>
+          <div class="workspace-grid workspace-grid--wide">
+            <section class="panel">
+              <div class="section-header">
+                <div>
+                  <h2 class="section-title">节点管理</h2>
+                  <p class="section-copy">当前学习树：<span id="activeTreeLabel">未选择</span></p>
+                </div>
+              </div>
+
+              <form id="nodeForm">
+                <div id="nodeFormModeText" class="small" style="margin-bottom: 12px;">新增模式：追加一个子节点。</div>
+                <label for="nodeParentSelect">父节点</label>
+                <input id="nodeParentSearchInput" type="search" placeholder="按节点名称 / 路径查找父节点" style="margin-bottom: 8px;" />
+                <select id="nodeParentSelect"></select>
+                <div class="actions" style="margin-top: 8px;">
+                  <button id="clearNodeParentSearchBtn" type="button">清空父节点筛选</button>
+                </div>
+                <div id="nodeParentHelper" class="small" style="margin-top: 6px;">新节点会挂在所选父节点下；编辑根节点时会忽略。</div>
+
+                <div class="inline">
+                  <div>
+                    <label for="nodeName">节点名称</label>
+                    <input id="nodeName" required />
+                  </div>
+                  <div>
+                    <label for="nodeSort">排序（整数）</label>
+                    <input id="nodeSort" type="number" value="0" />
+                  </div>
+                </div>
+                <div class="inline">
+                  <div>
+                    <label for="nodeMilestoneLevel">升级等级（可选）</label>
+                    <input id="nodeMilestoneLevel" type="number" min="0" value="0" />
+                  </div>
+                  <div>
+                    <label for="nodeRequiredLevel">解锁等级（可选）</label>
+                    <input id="nodeRequiredLevel" type="number" min="0" value="0" />
+                  </div>
+                </div>
+                <div class="small" style="margin-top: 6px;">新学生默认从 Lv.0 开始。通常第一级内容填“解锁等级 0、升级等级 1”，第二级内容再填“解锁等级 1”。</div>
+
+                <div class="feature-item" style="margin-top: 12px;">
+                  <strong>题目资料（可选）</strong>
+                  <div class="small" style="margin-top: 6px;">
+                    可同时上传多份 PDF 或题图，并为每份资料单独命名。保存时支持追加、改名或删除。
+                  </div>
+                  <div style="margin-top: 12px;">
+                    <label for="nodeProblemFiles">上传题目附件</label>
+                    <input id="nodeProblemFiles" type="file" multiple accept=".pdf,application/pdf,image/png,image/jpeg,image/webp" />
+                    <div class="small" style="margin-top: 6px;">可重复选择，新文件会继续追加。</div>
+                  </div>
+                  <div id="nodeProblemAttachmentSummary" class="small" style="margin-top: 8px;">当前未附带题目资料。</div>
+                  <div id="nodeProblemExistingList" class="feature-list" style="margin-top: 10px;"></div>
+                  <div id="nodeProblemPendingList" class="feature-list" style="margin-top: 10px;"></div>
+                  <div class="form-actions" style="margin-top: 10px;">
+                    <button id="clearNodeProblemPendingBtn" type="button" hidden>清空待上传</button>
+                  </div>
+                </div>
+
+                <div class="feature-item" style="margin-top: 12px;">
+                  <strong>前置知识监视器（可选）</strong>
+                  <div class="small" style="margin-top: 6px;">
+                    满足以下前置条件后解锁。支持“全部满足 / 任一满足”，也可直接选择父节点表示整棵子树。
+                  </div>
+                  <div style="margin-top: 12px;">
+                    <label for="nodePrereqMode">前置条件模式</label>
+                    <select id="nodePrereqMode">
+                      <option value="all">全部满足</option>
+                      <option value="any">任一满足</option>
+                    </select>
+                  </div>
+                  <div class="inline" style="margin-top: 12px;">
+                    <div>
+                      <label for="nodePrereqSourceSelect">前置节点 / 子树</label>
+                      <input id="nodePrereqSearchInput" type="search" placeholder="按节点名称 / 路径查找前置节点" style="margin-bottom: 8px;" />
+                      <select id="nodePrereqSourceSelect"></select>
+                      <div class="actions" style="margin-top: 8px;">
+                        <button id="clearNodePrereqSearchBtn" type="button">清空前置筛选</button>
+                      </div>
+                      <div class="small" style="margin-top: 6px;">按节点路径选择即可。</div>
+                    </div>
+                    <div>
+                      <label for="nodePrereqThreshold">完成度阈值（%）</label>
+                      <input id="nodePrereqThreshold" type="number" min="1" max="100" value="80" />
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <button id="addNodePrereqBtn" type="button">添加前置条件</button>
+                  </div>
+                  <div id="nodePrereqList" class="feature-list" style="margin-top: 10px;"></div>
+                </div>
+
+                <div class="form-actions">
+                  <button id="nodeSubmitBtn" class="primary" type="submit">新增子节点</button>
+                  <button id="nodeCancelEditBtn" type="button" hidden>取消编辑</button>
+                </div>
+              </form>
+              <div id="nodeFormHint" class="small" style="margin-top: 8px;">请选择学习树后继续添加节点。</div>
+            </section>
+
+            <section class="panel panel--mindmap">
+              <div class="section-header">
+                <div>
+                  <h2 class="section-title">树图预览</h2>
+                  <p class="section-copy">快速查看当前章节结构。</p>
+                </div>
+              </div>
+              <div id="mindmapView" class="mindmap"></div>
+            </section>
+          </div>
 
           <section class="panel">
-            <h2>节点管理（XMind 类树结构）</h2>
-            <p class="small">当前选中学习树：<span id="activeTreeLabel">未选择</span></p>
-
-            <form id="nodeForm">
-              <label for="nodeParentSelect">父节点</label>
-              <select id="nodeParentSelect"></select>
-
-              <div class="inline">
-                <div>
-                  <label for="nodeName">节点名称</label>
-                  <input id="nodeName" required />
-                </div>
-                <div>
-                  <label for="nodeSort">排序（整数）</label>
-                  <input id="nodeSort" type="number" value="0" />
-                </div>
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">节点列表</h2>
+                <p class="section-copy">系统树根节点不能删除，其余节点都可调整。</p>
               </div>
-
-              <div style="margin-top: 10px">
-                <button class="primary" type="submit">新增子节点</button>
-              </div>
-            </form>
-
-            <div style="margin-top: 12px">
-              <div class="small" style="margin-bottom: 6px">树图预览</div>
-              <div id="mindmapView" class="mindmap"></div>
             </div>
-
-            <div style="margin-top: 14px; overflow: auto">
+            <div class="toolbar" style="margin-bottom: 12px; gap: 12px; align-items: center;">
+              <div id="nodeSearchSummary" class="small">请先选择学习树。</div>
+              <div class="actions" style="gap: 8px; align-items: center;">
+                <input id="nodeSearchInput" type="search" placeholder="按节点名称查找" style="min-width: 240px;" />
+                <button id="clearNodeSearchBtn" type="button">清空筛选</button>
+              </div>
+            </div>
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
@@ -150,49 +453,77 @@
               </table>
             </div>
           </section>
+        </div>
 
+        <div class="dashboard-view" data-view="scores" hidden>
           <section class="panel">
-            <h2>评分管理</h2>
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">评分管理</h2>
+                <p class="section-copy">先选择学生和学习树，再加载数据。</p>
+              </div>
+            </div>
             <div class="inline">
               <div>
                 <label for="scoreStudentSelect">学生</label>
+                <input id="scoreStudentSearchInput" type="search" placeholder="按用户名 / 姓名查找学生" style="margin-bottom: 8px;" />
                 <select id="scoreStudentSelect"></select>
               </div>
               <div>
                 <label for="scoreTreeSelect">学习树</label>
+                <input id="scoreTreeSearchInput" type="search" placeholder="按章节标题查找学习树" style="margin-bottom: 8px;" />
                 <select id="scoreTreeSelect"></select>
               </div>
             </div>
-            <div style="margin-top: 8px">
-              <button id="loadScoresBtn">加载评分表</button>
+            <div class="actions" style="margin-top: 8px;">
+              <button id="clearScoreStudentSearchBtn" type="button">清空学生筛选</button>
+              <button id="clearScoreTreeSearchBtn" type="button">清空学习树筛选</button>
             </div>
+            <div class="form-actions">
+              <button id="loadScoresBtn" type="button">加载评分表</button>
+            </div>
+          </section>
 
-            <div style="margin-top: 14px; overflow: auto">
+          <section class="panel">
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">节点进度</h2>
+                <p class="section-copy">显示父节点和任务点进度。</p>
+              </div>
+            </div>
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>知识点</th>
-                    <th>评分</th>
-                    <th>评语</th>
-                    <th>学生代码</th>
-                    <th>操作</th>
+                    <th>类型</th>
+                    <th>当前分 / 总分</th>
+                    <th>任务点数</th>
+                    <th>已提交</th>
+                    <th>最近提交 / 最近批改</th>
                   </tr>
                 </thead>
                 <tbody id="scoresTbody"></tbody>
               </table>
             </div>
+          </section>
 
-            <h3 style="margin-top: 16px">每次提交批改</h3>
-            <div class="small">可对学生每一条提交记录单独评分</div>
-            <div style="margin-top: 10px; overflow: auto">
-              <table>
+          <section class="panel">
+            <div class="section-header">
+              <div>
+                <h2 class="section-title">每次提交批改</h2>
+                <p class="section-copy">节点当前分始终取历史最高分。</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="submission-review-table">
                 <thead>
                   <tr>
                     <th>提交ID</th>
                     <th>知识点</th>
                     <th>提交时间</th>
                     <th>提交代码</th>
-                    <th>提交图片</th>
+                    <th>提交附件</th>
                     <th>本次评分</th>
                     <th>本次评语</th>
                     <th>操作</th>
@@ -207,10 +538,16 @@
     </div>
 
     <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script src="/cloudbase-config.js"></script>
-    <script src="/cloudbase-client.js"></script>
+    <script src="./cloudbase-config.js"></script>
+    <script src="./cloudbase-client.js"></script>
     <script>
       const TEACHER_TOKEN_KEY = 'teacher_access_token';
+      const DEFAULT_PET_VISUAL_STATES = [
+        { key: 'hungry', title: '饥寒交迫' },
+        { key: 'gloomy', title: '郁闷' },
+        { key: 'happy', title: '开心' },
+        { key: 'super_happy', title: '超级开心' },
+      ];
       let teacherToken = localStorage.getItem(TEACHER_TOKEN_KEY) || '';
 
       const state = {
@@ -218,20 +555,464 @@
         students: [],
         trees: [],
         nodesByTree: new Map(),
+        systemTreeSettings: null,
         selectedTreeId: null,
+        activeView: 'overview',
+        nodeFormEditingId: null,
+        nodeFormPrerequisites: [],
+        nodeFormPrerequisiteMode: 'all',
+        nodeFormExistingProblemAttachments: [],
+        nodeFormPendingProblemAttachments: [],
+        nodeSearchKeyword: '',
+        nodeParentSearchKeyword: '',
+        nodePrereqSearchKeyword: '',
+        studentSearchKeyword: '',
+        treeSearchKeyword: '',
+        scoreStudentSearchKeyword: '',
+        scoreTreeSearchKeyword: '',
+        petFrameVisualStates: DEFAULT_PET_VISUAL_STATES.map((item) => ({ ...item })),
+        petFrameEditorOpen: false,
+        petFrameEditorStudentId: '',
+        petFrameEditorStateKey: 'hungry',
+        petFrameEditorFramesByState: buildEmptyTeacherPetFrameStateMap(DEFAULT_PET_VISUAL_STATES),
+        petFrameEditorPendingByState: buildEmptyTeacherPetFrameStateMap(DEFAULT_PET_VISUAL_STATES),
       };
 
       const noticeEl = document.getElementById('notice');
       const loginSection = document.getElementById('loginSection');
       const dashboardSection = document.getElementById('dashboardSection');
       const teacherNameEl = document.getElementById('teacherName');
+      const dashboardViews = Array.from(document.querySelectorAll('.dashboard-view'));
+      const dashboardViewButtons = Array.from(document.querySelectorAll('[data-view-target]'));
+      const dashboardNavButtons = Array.from(document.querySelectorAll('[data-nav-view]'));
+      let noticeTimer = 0;
 
       function showNotice(message, type = 'success') {
+        window.clearTimeout(noticeTimer);
         if (!message) {
           noticeEl.innerHTML = '';
           return;
         }
-        noticeEl.innerHTML = `<div class="notice ${type === 'error' ? 'error' : 'success'}">${message}</div>`;
+
+        const notice = document.createElement('div');
+        notice.className = `notice ${type === 'error' ? 'error' : 'success'}`;
+
+        const title = document.createElement('div');
+        title.className = 'notice-title';
+        title.textContent = type === 'error' ? '操作失败' : '操作已生效';
+
+        const body = document.createElement('div');
+        body.textContent = message;
+
+        notice.appendChild(title);
+        notice.appendChild(body);
+        noticeEl.innerHTML = '';
+        noticeEl.appendChild(notice);
+
+        noticeTimer = window.setTimeout(() => {
+          noticeEl.innerHTML = '';
+        }, 3600);
+      }
+
+      async function withButtonBusy(button, pendingText, callback) {
+        if (!button) {
+          return callback();
+        }
+
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = pendingText;
+
+        try {
+          return await callback();
+        } finally {
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      }
+
+
+      function buildEmptyTeacherPetFrameStateMap(states = DEFAULT_PET_VISUAL_STATES) {
+        return (Array.isArray(states) ? states : DEFAULT_PET_VISUAL_STATES).reduce((result, item) => {
+          result[item.key] = [];
+          return result;
+        }, {});
+      }
+
+      function getTeacherPetFrameStates() {
+        return Array.isArray(state.petFrameVisualStates) && state.petFrameVisualStates.length
+          ? state.petFrameVisualStates
+          : DEFAULT_PET_VISUAL_STATES;
+      }
+
+      function getTeacherPetStateTitle(stateKey) {
+        const matched = getTeacherPetFrameStates().find((item) => item.key === stateKey);
+        return matched ? matched.title : stateKey;
+      }
+
+      function buildTeacherStudentLabel(student) {
+        if (!student) {
+          return '';
+        }
+        return student.name
+          ? `${student.username}（${student.name}）`
+          : (student.username || '未命名学生');
+      }
+
+      function normalizeTeacherPetFrameItem(item, index = 0) {
+        if (!item || typeof item !== 'object') {
+          return null;
+        }
+        const fileId = String(item.file_id ?? item.fileId ?? '').trim();
+        const url = String(item.url || '').trim();
+        if (!fileId && !url) {
+          return null;
+        }
+        const fileName = String(item.file_name ?? item.fileName ?? `frame-${index + 1}.png`).trim() || `frame-${index + 1}.png`;
+        const mimeType = String(item.mime_type ?? item.mimeType ?? '').trim().toLowerCase();
+        return {
+          fileId,
+          fileName,
+          mimeType,
+          url,
+        };
+      }
+
+      function normalizeTeacherPetFrameStateMap(raw = {}, states = null) {
+        const visualStates = Array.isArray(states) && states.length ? states : getTeacherPetFrameStates();
+        const result = buildEmptyTeacherPetFrameStateMap(visualStates);
+        visualStates.forEach((item) => {
+          const rawItems = Array.isArray(raw[item.key]) ? raw[item.key] : [];
+          result[item.key] = rawItems
+            .map((entry, index) => normalizeTeacherPetFrameItem(entry, index))
+            .filter(Boolean);
+        });
+        return result;
+      }
+
+      function releaseTeacherPetPendingFrame(item) {
+        if (item && item.previewUrl) {
+          URL.revokeObjectURL(item.previewUrl);
+        }
+      }
+
+      function releaseTeacherPetPendingStateFrames(items = []) {
+        (Array.isArray(items) ? items : []).forEach((item) => releaseTeacherPetPendingFrame(item));
+      }
+
+      function releaseAllTeacherPetPendingFrames() {
+        const stateMap = state.petFrameEditorPendingByState || {};
+        Object.values(stateMap).forEach((items) => releaseTeacherPetPendingStateFrames(items));
+      }
+
+      function resetStudentPetFrameEditor() {
+        releaseAllTeacherPetPendingFrames();
+        state.petFrameEditorOpen = false;
+        state.petFrameEditorStudentId = '';
+        state.petFrameEditorStateKey = getTeacherPetFrameStates()[0] ? getTeacherPetFrameStates()[0].key : 'hungry';
+        state.petFrameEditorFramesByState = buildEmptyTeacherPetFrameStateMap(getTeacherPetFrameStates());
+        state.petFrameEditorPendingByState = buildEmptyTeacherPetFrameStateMap(getTeacherPetFrameStates());
+        const fileInput = document.getElementById('studentPetFrameFiles');
+        if (fileInput) {
+          fileInput.value = '';
+        }
+      }
+
+      function validateStudentPetFrameFile(file) {
+        const mimeType = String(file && file.type || '').trim().toLowerCase();
+        const allowed = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
+        if (!allowed.has(mimeType)) {
+          throw new Error('宠物帧仅支持 PNG、JPEG、WEBP');
+        }
+        if (Number(file && file.size || 0) > 5 * 1024 * 1024) {
+          throw new Error('宠物帧大小不能超过 5MB');
+        }
+        return mimeType === 'image/jpg' ? 'image/jpeg' : mimeType;
+      }
+
+      function createTeacherPetPendingFrame(file) {
+        const mimeType = validateStudentPetFrameFile(file);
+        return {
+          key: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          file,
+          fileName: file.name || 'pet-frame.png',
+          mimeType,
+          previewUrl: URL.createObjectURL(file),
+        };
+      }
+
+      function moveItemInList(list, fromIndex, delta) {
+        const nextIndex = fromIndex + delta;
+        if (!Array.isArray(list) || fromIndex < 0 || nextIndex < 0 || fromIndex >= list.length || nextIndex >= list.length) {
+          return false;
+        }
+        const [item] = list.splice(fromIndex, 1);
+        list.splice(nextIndex, 0, item);
+        return true;
+      }
+
+      async function openStudentPetFrameEditor(student) {
+        if (!student || !student.id) {
+          return;
+        }
+
+        releaseAllTeacherPetPendingFrames();
+        state.petFrameEditorOpen = true;
+        state.petFrameEditorStudentId = String(student.id);
+        state.petFrameVisualStates = DEFAULT_PET_VISUAL_STATES.map((item) => ({ ...item }));
+        state.petFrameEditorStateKey = getTeacherPetFrameStates()[0] ? getTeacherPetFrameStates()[0].key : 'hungry';
+        state.petFrameEditorFramesByState = buildEmptyTeacherPetFrameStateMap(getTeacherPetFrameStates());
+        state.petFrameEditorPendingByState = buildEmptyTeacherPetFrameStateMap(getTeacherPetFrameStates());
+        renderStudentPetFrameEditor();
+
+        try {
+          const payload = await api(`/api/students/${student.id}/pet-frames`);
+          if (String(state.petFrameEditorStudentId) !== String(student.id)) {
+            return;
+          }
+
+          state.petFrameVisualStates = Array.isArray(payload.pet_visual_states) && payload.pet_visual_states.length
+            ? payload.pet_visual_states.map((item) => ({
+              key: String(item.key || '').trim(),
+              title: String(item.title || item.key || '').trim() || String(item.key || '').trim(),
+            })).filter((item) => item.key)
+            : DEFAULT_PET_VISUAL_STATES.map((item) => ({ ...item }));
+          state.petFrameEditorFramesByState = normalizeTeacherPetFrameStateMap(payload.pet_frames || {}, state.petFrameVisualStates);
+          state.petFrameEditorPendingByState = buildEmptyTeacherPetFrameStateMap(state.petFrameVisualStates);
+          if (!getTeacherPetFrameStates().some((item) => item.key === state.petFrameEditorStateKey)) {
+            state.petFrameEditorStateKey = getTeacherPetFrameStates()[0] ? getTeacherPetFrameStates()[0].key : 'hungry';
+          }
+          renderStudentPetFrameEditor();
+          const editorEl = document.getElementById('studentPetFrameEditor');
+          if (editorEl) {
+            editorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        } catch (error) {
+          resetStudentPetFrameEditor();
+          renderStudentPetFrameEditor();
+          throw error;
+        }
+      }
+
+      function renderStudentPetFrameEditor() {
+        const editorEl = document.getElementById('studentPetFrameEditor');
+        if (!editorEl) {
+          return;
+        }
+
+        const selectedStudent = state.students.find((item) => String(item.id) === String(state.petFrameEditorStudentId)) || null;
+        if (!state.petFrameEditorOpen || !selectedStudent) {
+          editorEl.hidden = true;
+          return;
+        }
+
+        editorEl.hidden = false;
+        const states = getTeacherPetFrameStates();
+        const activeStateKey = states.some((item) => item.key === state.petFrameEditorStateKey)
+          ? state.petFrameEditorStateKey
+          : (states[0] ? states[0].key : 'hungry');
+        state.petFrameEditorStateKey = activeStateKey;
+
+        const frameStateMap = state.petFrameEditorFramesByState || buildEmptyTeacherPetFrameStateMap(states);
+        const pendingStateMap = state.petFrameEditorPendingByState || buildEmptyTeacherPetFrameStateMap(states);
+        const currentExisting = Array.isArray(frameStateMap[activeStateKey]) ? frameStateMap[activeStateKey] : [];
+        const currentPending = Array.isArray(pendingStateMap[activeStateKey]) ? pendingStateMap[activeStateKey] : [];
+
+        document.getElementById('studentPetFrameSummary').textContent = `${buildTeacherStudentLabel(selectedStudent)} · 为四种宠物状态上传或调整播放帧。`;
+        document.getElementById('studentPetStateLabel').textContent = `当前状态：${getTeacherPetStateTitle(activeStateKey)}`;
+        document.getElementById('studentPetStateHint').textContent = currentExisting.length
+          ? `当前状态已保存 ${currentExisting.length} 帧，可继续追加或重排。`
+          : '当前状态还没有已保存帧。';
+        document.getElementById('studentPetExistingSummary').textContent = currentExisting.length
+          ? `已保存 ${currentExisting.length} 帧，拖动顺序请用上移 / 下移调整。`
+          : '当前没有已保存的帧。';
+        document.getElementById('studentPetPendingSummary').textContent = currentPending.length
+          ? `待上传 ${currentPending.length} 帧，保存后会追加到当前状态末尾。`
+          : '当前没有待上传的新帧。';
+
+        document.getElementById('studentPetFrameSummaryGrid').innerHTML = states.map((item) => {
+          const savedCount = Array.isArray(frameStateMap[item.key]) ? frameStateMap[item.key].length : 0;
+          const pendingCount = Array.isArray(pendingStateMap[item.key]) ? pendingStateMap[item.key].length : 0;
+          return `
+            <div class="pet-frame-summary-card ${item.key === activeStateKey ? 'is-active' : ''}">
+              <strong>${escapeHtml(item.title)}</strong>
+              <div class="small">已保存 ${savedCount} 帧${pendingCount ? ` · 待传 ${pendingCount} 帧` : ''}</div>
+            </div>
+          `;
+        }).join('');
+
+        const tabsEl = document.getElementById('studentPetStateTabs');
+        tabsEl.innerHTML = states.map((item) => `
+          <button type="button" class="pet-frame-tab ${item.key === activeStateKey ? 'active' : ''}" data-pet-frame-tab="${escapeHtml(item.key)}">${escapeHtml(item.title)}</button>
+        `).join('');
+        Array.from(tabsEl.querySelectorAll('[data-pet-frame-tab]')).forEach((button) => {
+          button.onclick = () => {
+            state.petFrameEditorStateKey = String(button.dataset.petFrameTab || activeStateKey);
+            renderStudentPetFrameEditor();
+          };
+        });
+
+        const existingListEl = document.getElementById('studentPetExistingList');
+        existingListEl.innerHTML = currentExisting.length
+          ? currentExisting.map((item, index) => `
+              <div class="pet-frame-card">
+                <div class="pet-frame-order">已保存帧 ${index + 1}</div>
+                ${item.url ? `<img class="pet-frame-thumb" src="${escapeHtml(item.url)}" alt="${escapeHtml(item.fileName)}" />` : '<div class="pet-frame-thumb pet-frame-thumb--placeholder">暂无预览</div>'}
+                <div class="small">${escapeHtml(item.fileName)}</div>
+                <div class="actions">
+                  <button type="button" data-pet-frame-existing-move="up" data-pet-frame-existing-index="${index}">上移</button>
+                  <button type="button" data-pet-frame-existing-move="down" data-pet-frame-existing-index="${index}">下移</button>
+                  <button type="button" class="danger" data-pet-frame-existing-remove="${index}">移除</button>
+                </div>
+              </div>
+            `).join('')
+          : '<div class="small">当前状态还没有已保存帧。</div>';
+
+        Array.from(existingListEl.querySelectorAll('[data-pet-frame-existing-move]')).forEach((button) => {
+          button.onclick = () => {
+            const index = Number(button.dataset.petFrameExistingIndex);
+            const delta = button.dataset.petFrameExistingMove === 'up' ? -1 : 1;
+            const list = state.petFrameEditorFramesByState[activeStateKey] || [];
+            if (moveItemInList(list, index, delta)) {
+              renderStudentPetFrameEditor();
+            }
+          };
+        });
+
+        Array.from(existingListEl.querySelectorAll('[data-pet-frame-existing-remove]')).forEach((button) => {
+          button.onclick = () => {
+            const index = Number(button.dataset.petFrameExistingRemove);
+            const list = state.petFrameEditorFramesByState[activeStateKey] || [];
+            if (!Number.isInteger(index) || index < 0 || index >= list.length) {
+              return;
+            }
+            list.splice(index, 1);
+            renderStudentPetFrameEditor();
+          };
+        });
+
+        const pendingListEl = document.getElementById('studentPetPendingList');
+        pendingListEl.innerHTML = currentPending.length
+          ? currentPending.map((item, index) => `
+              <div class="pet-frame-card">
+                <div class="pet-frame-order">待上传帧 ${index + 1}</div>
+                ${item.previewUrl ? `<img class="pet-frame-thumb" src="${escapeHtml(item.previewUrl)}" alt="${escapeHtml(item.fileName)}" />` : '<div class="pet-frame-thumb pet-frame-thumb--placeholder">暂无预览</div>'}
+                <div class="small">${escapeHtml(item.fileName)}</div>
+                <div class="actions">
+                  <button type="button" data-pet-frame-pending-move="up" data-pet-frame-pending-index="${index}">上移</button>
+                  <button type="button" data-pet-frame-pending-move="down" data-pet-frame-pending-index="${index}">下移</button>
+                  <button type="button" class="danger" data-pet-frame-pending-remove="${index}">移除</button>
+                </div>
+              </div>
+            `).join('')
+          : '<div class="small">当前没有待上传的新帧。</div>';
+
+        Array.from(pendingListEl.querySelectorAll('[data-pet-frame-pending-move]')).forEach((button) => {
+          button.onclick = () => {
+            const index = Number(button.dataset.petFramePendingIndex);
+            const delta = button.dataset.petFramePendingMove === 'up' ? -1 : 1;
+            const list = state.petFrameEditorPendingByState[activeStateKey] || [];
+            if (moveItemInList(list, index, delta)) {
+              renderStudentPetFrameEditor();
+            }
+          };
+        });
+
+        Array.from(pendingListEl.querySelectorAll('[data-pet-frame-pending-remove]')).forEach((button) => {
+          button.onclick = () => {
+            const index = Number(button.dataset.petFramePendingRemove);
+            const list = state.petFrameEditorPendingByState[activeStateKey] || [];
+            if (!Number.isInteger(index) || index < 0 || index >= list.length) {
+              return;
+            }
+            const [removed] = list.splice(index, 1);
+            releaseTeacherPetPendingFrame(removed);
+            renderStudentPetFrameEditor();
+          };
+        });
+
+        document.getElementById('clearStudentPetPendingBtn').hidden = !currentPending.length;
+      }
+
+      async function buildStudentPetFramePayload() {
+        const stateKey = state.petFrameEditorStateKey;
+        const keepFrames = (state.petFrameEditorFramesByState[stateKey] || [])
+          .map((item) => String(item.fileId || '').trim())
+          .filter(Boolean);
+        const newFrames = [];
+
+        for (const item of state.petFrameEditorPendingByState[stateKey] || []) {
+          if (!item.file) {
+            continue;
+          }
+          const base64 = await readFileAsDataUrl(item.file);
+          newFrames.push({
+            fileName: item.fileName,
+            mimeType: item.mimeType,
+            base64,
+            dataUrl: base64,
+          });
+        }
+
+        return {
+          stateKey,
+          keepFrames,
+          newFrames,
+        };
+      }
+
+      function setActiveDashboardView(view) {
+        const nextView = dashboardViews.some((item) => item.dataset.view === view)
+          ? view
+          : 'overview';
+        state.activeView = nextView;
+
+        dashboardViews.forEach((item) => {
+          const active = item.dataset.view === nextView;
+          item.hidden = !active;
+          item.classList.toggle('active', active);
+        });
+
+        dashboardViewButtons.forEach((button) => {
+          const active = button.dataset.viewTarget === nextView;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+      }
+
+      function renderDashboardSummary() {
+        const selectedTree = state.trees.find((item) => String(item.id) === String(state.selectedTreeId)) || null;
+        const selectedNodes = selectedTree ? (state.nodesByTree.get(selectedTree.id) || []) : [];
+        const customTreeCount = state.trees.filter((tree) => !isSystemTree(tree)).length;
+        const systemTreeCount = state.trees.filter((tree) => isSystemTree(tree)).length;
+
+        document.getElementById('summaryStudentCount').textContent = String(state.students.length);
+        document.getElementById('summaryCustomTreeCount').textContent = String(customTreeCount);
+        document.getElementById('summarySystemTreeCount').textContent = String(systemTreeCount);
+        document.getElementById('summarySelectedNodeCount').textContent = String(selectedNodes.length);
+        document.getElementById('summarySelectedTreeMeta').textContent = selectedTree
+          ? `${selectedTree.title} · ${getTreeTypeLabel(selectedTree)}`
+          : '尚未选择学习树';
+
+        const titleEl = document.getElementById('overviewSelectedTreeName');
+        const descEl = document.getElementById('overviewSelectedTreeDesc');
+        const metaEl = document.getElementById('overviewSelectedTreeMeta');
+
+        if (!selectedTree) {
+          titleEl.textContent = '尚未选择学习树';
+          descEl.textContent = '请先在“学习树管理”里选择当前章节。';
+          metaEl.innerHTML = '<span class="entity-pill readonly">未建立上下文</span>';
+          return;
+        }
+
+        titleEl.textContent = selectedTree.title || '未命名学习树';
+        descEl.textContent = selectedTree.chapter_desc || '当前章节还没有描述。';
+        metaEl.innerHTML = [
+          renderPill(getTreeTypeLabel(selectedTree), isSystemTree(selectedTree) ? 'system' : ''),
+          renderPill(`树 ${formatShortNodeId(selectedTree.id)}`, 'readonly'),
+          renderPill(`${selectedNodes.length} 个节点`, selectedNodes.length ? '' : 'readonly'),
+          isSystemTree(selectedTree) ? renderPill('系统树', 'system') : '',
+        ].filter(Boolean).join('');
       }
 
       async function api(path, options = {}) {
@@ -279,6 +1060,430 @@
         return ordered;
       }
 
+      function normalizeNodeIdValue(value) {
+        if (value === undefined || value === null) {
+          return '';
+        }
+        return String(value).trim();
+      }
+
+      function formatShortNodeId(value) {
+        const normalized = normalizeNodeIdValue(value);
+        if (!normalized) {
+          return '-';
+        }
+        if (normalized.length <= 12) {
+          return normalized;
+        }
+        return `${normalized.slice(0, 6)}...${normalized.slice(-4)}`;
+      }
+
+      function getNodeUnlockPrerequisites(node) {
+        const raw = node && (node.unlock_prerequisites ?? node.unlockPrerequisites);
+        if (!Array.isArray(raw)) {
+          return [];
+        }
+
+        return raw
+          .map((item) => {
+            const sourceNodeId = normalizeNodeIdValue(item.sourceNodeId ?? item.source_node_id);
+            const thresholdPercent = Number(item.thresholdPercent ?? item.threshold_percent ?? item.threshold);
+            if (!sourceNodeId) {
+              return null;
+            }
+            if (!Number.isFinite(thresholdPercent) || thresholdPercent <= 0 || thresholdPercent > 100) {
+              return null;
+            }
+            return {
+              source_node_id: sourceNodeId,
+              threshold_percent: Number.isInteger(thresholdPercent)
+                ? thresholdPercent
+                : Number(thresholdPercent.toFixed(1)),
+            };
+          })
+          .filter(Boolean);
+      }
+
+      function getNodeUnlockPrerequisiteMode(node) {
+        const value = String(node && (node.unlock_prerequisite_mode ?? node.unlockPrerequisiteMode) || '')
+          .trim()
+          .toLowerCase();
+        return value === 'any' ? 'any' : 'all';
+      }
+
+      function formatThresholdPercent(value) {
+        const num = Number(value);
+        if (!Number.isFinite(num)) {
+          return '0%';
+        }
+        return Number.isInteger(num)
+          ? `${num}%`
+          : `${num.toFixed(1).replace(/\.0$/, '')}%`;
+      }
+
+      function formatPrerequisiteLockedText(unmetRules, mode) {
+        if (!Array.isArray(unmetRules) || !unmetRules.length) {
+          return '';
+        }
+        const parts = unmetRules.map((item) => `${item.sourceNode ? item.sourceNode.name : '前置节点'} ${formatThresholdPercent(item.thresholdPercent)}`);
+        if (mode === 'any') {
+          return `需满足以下任一条件：${parts.join(' 或 ')}`;
+        }
+        return `需同时完成 ${parts.join('、')}`;
+      }
+
+      function getSelectedTreeNodes() {
+        return state.selectedTreeId
+          ? (state.nodesByTree.get(state.selectedTreeId) || [])
+          : [];
+      }
+
+      function getNodeById(nodes, nodeId) {
+        return (nodes || []).find((item) => String(item.id) === String(nodeId)) || null;
+      }
+
+      function getNodeFormEditingNode() {
+        if (!state.nodeFormEditingId) {
+          return null;
+        }
+        return getNodeById(getSelectedTreeNodes(), state.nodeFormEditingId);
+      }
+
+      function getNodeDescendantIdsForForm(nodeId, nodes = []) {
+        const byParent = new Map();
+        const result = new Set();
+        nodes.forEach((node) => {
+          const key = node.parent_id === null ? '__root__' : String(node.parent_id);
+          if (!byParent.has(key)) {
+            byParent.set(key, []);
+          }
+          byParent.get(key).push(node);
+        });
+
+        const queue = [String(nodeId)];
+        while (queue.length) {
+          const current = queue.shift();
+          const children = byParent.get(current) || [];
+          children.forEach((child) => {
+            const childKey = String(child.id);
+            if (result.has(childKey)) {
+              return;
+            }
+            result.add(childKey);
+            queue.push(childKey);
+          });
+        }
+        return result;
+      }
+
+      function getAncestorIdsFromParent(parentId, nodeById = new Map()) {
+        const result = new Set();
+        let currentKey = parentId ? String(parentId) : '';
+        while (currentKey) {
+          if (result.has(currentKey)) {
+            break;
+          }
+          result.add(currentKey);
+          const currentNode = nodeById.get(currentKey);
+          currentKey = currentNode && currentNode.parent_id !== null
+            ? String(currentNode.parent_id)
+            : '';
+        }
+        return result;
+      }
+
+      function getNodeFormTargetParentId() {
+        const editingNode = getNodeFormEditingNode();
+        if (editingNode && editingNode.parent_id === null) {
+          return null;
+        }
+        const rawValue = document.getElementById('nodeParentSelect').value;
+        if (rawValue === undefined || rawValue === null || rawValue === '') {
+          return editingNode ? editingNode.parent_id : null;
+        }
+        return rawValue;
+      }
+
+      function getSiblingOrderMap(nodes = []) {
+        const groups = new Map();
+        nodes.forEach((node) => {
+          const key = node.parent_id === null || node.parent_id === undefined ? 'root' : String(node.parent_id);
+          if (!groups.has(key)) {
+            groups.set(key, []);
+          }
+          groups.get(key).push(node);
+        });
+        const orderMap = new Map();
+        groups.forEach((items) => {
+          items
+            .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0) || String(a.id).localeCompare(String(b.id)))
+            .forEach((item, index) => {
+              orderMap.set(normalizeNodeIdValue(item.id), index + 1);
+            });
+        });
+        return orderMap;
+      }
+
+      function getNodeLabelMap(nodes = []) {
+        const childCountByNodeId = new Map();
+        const siblingOrderMap = getSiblingOrderMap(nodes);
+        nodes.forEach((node) => {
+          if (node.parent_id === null || node.parent_id === undefined) {
+            return;
+          }
+          const key = String(node.parent_id);
+          childCountByNodeId.set(key, Number(childCountByNodeId.get(key) || 0) + 1);
+        });
+        const labelMap = new Map();
+        toTreeOrdered(nodes).forEach(({ node, depth }) => {
+          const nodeId = normalizeNodeIdValue(node.id);
+          const subtreeSuffix = Number(childCountByNodeId.get(nodeId) || 0) > 0
+            ? ' / 子树进度'
+            : '';
+          const prefix = `${'  '.repeat(depth)}${depth > 0 ? '└ ' : ''}`;
+          const orderLabel = siblingOrderMap.get(nodeId) || 1;
+          labelMap.set(nodeId, `${prefix}${orderLabel}. ${node.name}${subtreeSuffix}`);
+        });
+        return labelMap;
+      }
+
+      function renderNodeFormMode() {
+        const editingNode = getNodeFormEditingNode();
+        const modeTextEl = document.getElementById('nodeFormModeText');
+        const parentHelperEl = document.getElementById('nodeParentHelper');
+        const submitBtn = document.getElementById('nodeSubmitBtn');
+        const cancelBtn = document.getElementById('nodeCancelEditBtn');
+        const modeSelect = document.getElementById('nodePrereqMode');
+
+        if (editingNode) {
+          modeTextEl.textContent = `编辑模式：正在修改「${editingNode.name}」[${formatShortNodeId(editingNode.id)}]。`;
+          parentHelperEl.textContent = editingNode.parent_id === null
+            ? '根节点会忽略父节点字段。若是第一级内容，通常保持解锁等级为 0，达到目标后再用升级等级把学生提升到 1。'
+            : '可直接调整父节点、排序、升级等级、解锁等级和前置条件。新学生默认是 Lv.0，第一级内容通常填解锁等级 0。';
+          submitBtn.textContent = '保存节点';
+          cancelBtn.hidden = false;
+          modeSelect.disabled = false;
+          return;
+        }
+
+        modeTextEl.textContent = '新增模式：追加一个子节点。';
+        parentHelperEl.textContent = '新节点会挂在所选父节点下；新学生默认是 Lv.0，第一级内容通常填解锁等级 0。';
+        submitBtn.textContent = '新增子节点';
+        cancelBtn.hidden = true;
+        modeSelect.disabled = false;
+      }
+
+      function renderNodePrerequisiteList() {
+        const container = document.getElementById('nodePrereqList');
+        const labelMap = getNodeLabelMap(getSelectedTreeNodes());
+        const rules = state.nodeFormPrerequisites || [];
+        const modeLabel = state.nodeFormPrerequisiteMode === 'any' ? '任一满足' : '全部满足';
+
+        if (!rules.length) {
+          container.innerHTML = '<div class="small">未设置前置条件，当前只按等级或默认规则开放。</div>';
+          return;
+        }
+
+        const modeHint = state.nodeFormPrerequisiteMode === 'any'
+          ? '满足下面任意一条规则即可解锁。'
+          : '下面所有规则都满足后才会解锁。';
+
+        container.innerHTML = rules.map((rule, index) => `
+          <div class="feature-item">
+            ${index === 0 ? `<div class="small" style="margin-bottom: 8px;">模式：${escapeHtml(modeLabel)}。${escapeHtml(modeHint)}</div>` : ''}
+            <strong>${escapeHtml(labelMap.get(normalizeNodeIdValue(rule.source_node_id)) || `节点 [${formatShortNodeId(rule.source_node_id)}]`)}</strong>
+            <div class="small" style="margin-top: 6px;">达到 ${escapeHtml(formatThresholdPercent(rule.threshold_percent))} 后解锁。</div>
+            <div class="form-actions" style="margin-top: 8px;">
+              <button type="button" data-remove-node-prereq="${index}">移除这条规则</button>
+            </div>
+          </div>
+        `).join('');
+
+        Array.from(container.querySelectorAll('[data-remove-node-prereq]')).forEach((button) => {
+          button.onclick = () => {
+            const ruleIndex = Number(button.dataset.removeNodePrereq);
+            if (!Number.isInteger(ruleIndex) || ruleIndex < 0) {
+              return;
+            }
+            state.nodeFormPrerequisites = state.nodeFormPrerequisites.filter((_item, index) => index !== ruleIndex);
+            renderNodePrerequisiteList();
+            renderNodePrerequisiteSourceOptions();
+          };
+        });
+      }
+
+      function filterLookupEntries(entries, keyword, preferredValue = '') {
+        const normalizedKeyword = String(keyword || '').trim().toLowerCase();
+        if (!normalizedKeyword) {
+          return entries;
+        }
+        const filtered = entries.filter((entry) => String(entry.searchText || '').includes(normalizedKeyword));
+        if (preferredValue && !filtered.some((entry) => String(entry.value) === String(preferredValue))) {
+          const selectedEntry = entries.find((entry) => String(entry.value) === String(preferredValue));
+          if (selectedEntry) {
+            filtered.unshift(selectedEntry);
+          }
+        }
+        return filtered;
+      }
+
+      function renderNodeParentOptions() {
+        const select = document.getElementById('nodeParentSelect');
+        const previousValue = select.value;
+        const nodes = getSelectedTreeNodes();
+        const labelMap = getNodeLabelMap(nodes);
+        const pathMap = buildNodePathMap(nodes);
+        const entries = toTreeOrdered(nodes).map(({ node }) => ({
+          value: String(node.id),
+          label: labelMap.get(String(node.id)) || node.name,
+          searchText: `${String(node.name || '')} ${String(pathMap.get(node.id) || '')}`.toLowerCase(),
+        }));
+        const filteredEntries = filterLookupEntries(entries, state.nodeParentSearchKeyword, previousValue);
+        select.innerHTML = '';
+
+        if (!filteredEntries.length) {
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = '没有匹配的父节点';
+          select.appendChild(option);
+          select.disabled = true;
+          return;
+        }
+
+        select.disabled = false;
+        filteredEntries.forEach((entry) => {
+          const option = document.createElement('option');
+          option.value = entry.value;
+          option.textContent = entry.label;
+          select.appendChild(option);
+        });
+
+        select.value = filteredEntries.some((entry) => String(entry.value) === String(previousValue))
+          ? String(previousValue)
+          : String(filteredEntries[0].value);
+      }
+
+      function renderNodePrerequisiteSourceOptions() {
+        const select = document.getElementById('nodePrereqSourceSelect');
+        const previousValue = select.value;
+        const nodes = getSelectedTreeNodes();
+        const ordered = toTreeOrdered(nodes);
+        const labelMap = getNodeLabelMap(nodes);
+        const pathMap = buildNodePathMap(nodes);
+        const nodeById = new Map(nodes.map((node) => [String(node.id), node]));
+        const editingNode = getNodeFormEditingNode();
+        const bannedIds = new Set();
+
+        if (editingNode) {
+          bannedIds.add(String(editingNode.id));
+          getNodeDescendantIdsForForm(editingNode.id, nodes).forEach((item) => bannedIds.add(String(item)));
+          const effectiveParentId = editingNode.parent_id === null
+            ? null
+            : getNodeFormTargetParentId();
+          getAncestorIdsFromParent(effectiveParentId, nodeById).forEach((item) => bannedIds.add(String(item)));
+        } else {
+          getAncestorIdsFromParent(getNodeFormTargetParentId(), nodeById).forEach((item) => bannedIds.add(String(item)));
+        }
+
+        const entries = ordered
+          .filter(({ node }) => !bannedIds.has(String(node.id)))
+          .map(({ node }) => ({
+            value: String(node.id),
+            label: labelMap.get(String(node.id)) || node.name,
+            searchText: `${String(node.name || '')} ${String(pathMap.get(node.id) || '')}`.toLowerCase(),
+          }));
+        const filteredEntries = filterLookupEntries(entries, state.nodePrereqSearchKeyword, previousValue);
+        select.innerHTML = '';
+
+        if (!filteredEntries.length) {
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = '暂无可选前置节点';
+          select.appendChild(option);
+          select.disabled = true;
+          return;
+        }
+
+        select.disabled = false;
+        filteredEntries.forEach((entry) => {
+          const option = document.createElement('option');
+          option.value = entry.value;
+          option.textContent = entry.label;
+          select.appendChild(option);
+        });
+
+        select.value = filteredEntries.some((entry) => String(entry.value) === String(previousValue))
+          ? String(previousValue)
+          : String(filteredEntries[0].value);
+      }
+
+      function resetNodeForm() {
+        document.getElementById('nodeForm').reset();
+        state.nodeFormEditingId = null;
+        state.nodeFormPrerequisites = [];
+        state.nodeFormPrerequisiteMode = 'all';
+        state.nodeFormExistingProblemAttachments = [];
+        state.nodeFormPendingProblemAttachments = [];
+        document.getElementById('nodeSort').value = '0';
+        document.getElementById('nodeMilestoneLevel').value = '0';
+        document.getElementById('nodeRequiredLevel').value = '0';
+        document.getElementById('nodePrereqThreshold').value = '80';
+        document.getElementById('nodePrereqMode').value = 'all';
+        document.getElementById('nodeProblemFiles').value = '';
+
+        const parentSelect = document.getElementById('nodeParentSelect');
+        if (parentSelect.options.length > 0) {
+          parentSelect.value = parentSelect.options[0].value;
+        }
+
+        renderNodeFormMode();
+        renderNodePrerequisiteSourceOptions();
+        renderNodePrerequisiteList();
+        renderNodeProblemAttachmentState();
+      }
+
+      function startNodeEdit(node) {
+        if (!node) {
+          return;
+        }
+
+        state.nodeFormEditingId = String(node.id);
+        state.nodeFormPrerequisites = getNodeUnlockPrerequisites(node);
+        state.nodeFormPrerequisiteMode = getNodeUnlockPrerequisiteMode(node);
+        state.nodeFormExistingProblemAttachments = getNodeProblemAttachments(node);
+        state.nodeFormPendingProblemAttachments = [];
+        document.getElementById('nodeName').value = node.name || '';
+        document.getElementById('nodeSort').value = String(node.sort_order || 0);
+        document.getElementById('nodeMilestoneLevel').value = String(node.milestone_level || 0);
+        document.getElementById('nodeRequiredLevel').value = String(node.required_level || 0);
+        document.getElementById('nodePrereqThreshold').value = '80';
+        document.getElementById('nodePrereqMode').value = state.nodeFormPrerequisiteMode;
+        document.getElementById('nodeProblemFiles').value = '';
+
+        const parentSelect = document.getElementById('nodeParentSelect');
+        if (node.parent_id !== null) {
+          parentSelect.value = String(node.parent_id);
+        } else if (parentSelect.options.length > 0) {
+          parentSelect.value = parentSelect.options[0].value;
+        }
+
+        renderNodeFormMode();
+        renderNodePrerequisiteSourceOptions();
+        renderNodePrerequisiteList();
+        renderNodeProblemAttachmentState();
+        setActiveDashboardView('nodes');
+        document.getElementById('nodeName').focus();
+      }
+
+      function syncNodeFormAfterNodesLoaded() {
+        const editingNode = getNodeFormEditingNode();
+        if (editingNode) {
+          startNodeEdit(editingNode);
+          return;
+        }
+        resetNodeForm();
+      }
+
       function renderMindmap(nodes) {
         const view = document.getElementById('mindmapView');
         if (!nodes || nodes.length === 0) {
@@ -287,6 +1492,7 @@
         }
 
         const byParent = new Map();
+        const siblingOrderMap = getSiblingOrderMap(nodes);
         nodes.forEach((node) => {
           const key = node.parent_id === null ? 'root' : String(node.parent_id);
           if (!byParent.has(key)) {
@@ -304,9 +1510,10 @@
           const childHtml = children.length
             ? `<ul>${children.map((child) => renderNode(child)).join('')}</ul>`
             : '';
+          const siblingOrder = siblingOrderMap.get(normalizeNodeIdValue(node.id)) || 1;
           return `
             <li>
-              <span class="mindmap-node ${isRoot ? 'root' : ''}">${node.name} #${node.id}</span>
+              <span class="mindmap-node ${isRoot ? 'root' : ''}">${siblingOrder}. ${escapeHtml(node.name)}</span>
               ${childHtml}
             </li>
           `;
@@ -328,6 +1535,189 @@
           dashboardSection.hidden = true;
           teacherNameEl.textContent = '';
         }
+        setActiveDashboardView(state.activeView);
+      }
+
+      function clearTeacherSession() {
+        teacherToken = '';
+        localStorage.removeItem(TEACHER_TOKEN_KEY);
+        state.teacher = null;
+        state.students = [];
+        state.trees = [];
+        state.nodesByTree = new Map();
+        state.systemTreeSettings = null;
+        state.selectedTreeId = null;
+        state.nodeFormEditingId = null;
+        state.nodeFormPrerequisites = [];
+        state.nodeFormPrerequisiteMode = 'all';
+        state.nodeFormExistingProblemAttachments = [];
+        state.nodeFormPendingProblemAttachments = [];
+        refreshDashboardVisibility();
+        renderNodeFormMode();
+        renderNodePrerequisiteSourceOptions();
+        renderNodePrerequisiteList();
+        renderNodeProblemAttachmentState();
+        renderDashboardSummary();
+      }
+
+      function isSystemTree(tree) {
+        return !!(tree && tree.system_key);
+      }
+
+      function isSystemNode(node) {
+        return !!(node && node.system_key);
+      }
+
+      function getTreeTypeLabel(tree) {
+        const treeType = String((tree && tree.tree_type) || '').toLowerCase();
+        if (treeType === 'knowledge') {
+          return '知识资格树';
+        }
+        if (treeType === 'reward') {
+          return '悬赏作业树';
+        }
+        return '自定义学习树';
+      }
+
+      function renderPill(label, className = '') {
+        return `<span class="entity-pill${className ? ` ${className}` : ''}">${escapeHtml(label)}</span>`;
+      }
+
+      function renderNodeMeta(node) {
+        const pills = [];
+        const prerequisiteCount = getNodeUnlockPrerequisites(node).length;
+        const prerequisiteMode = getNodeUnlockPrerequisiteMode(node);
+        const attachments = getNodeProblemAttachments(node);
+        if (isSystemNode(node)) {
+          pills.push(renderPill('系统节点', 'system'));
+        }
+        if (attachments.length) {
+          pills.push(renderPill(`${attachments.length} 份题目资料`, 'readonly'));
+        }
+        if (Number(node.milestone_level || 0) > 0) {
+          pills.push(renderPill(`达成后升到 Lv.${node.milestone_level}`));
+        }
+        if (Number(node.required_level || 0) > 0) {
+          pills.push(renderPill(`Lv.${node.required_level} 解锁`));
+        }
+        if (prerequisiteCount > 0) {
+          pills.push(renderPill(`${prerequisiteCount} 条前置条件`, 'readonly'));
+          pills.push(renderPill(prerequisiteMode === 'any' ? '任一满足' : '全部满足', 'readonly'));
+        }
+        return pills.length
+          ? `<div class="entity-meta">${pills.join('')}</div>`
+          : '';
+      }
+
+      function formatPercent(value) {
+        const num = Number(value);
+        if (Number.isNaN(num)) {
+          return '-';
+        }
+        return `${Math.round(num * 100)}%`;
+      }
+
+      function getSystemNodeRole(node) {
+        if (!node) {
+          return '系统节点';
+        }
+        if (node.is_root) {
+          return '根节点';
+        }
+        if (Number(node.milestone_level || 0) > 0) {
+          return `达成后升到 Lv.${node.milestone_level}`;
+        }
+        if (Number(node.required_level || 0) > 0) {
+          return `达到 Lv.${node.required_level} 后解锁`;
+        }
+        return '系统节点';
+      }
+
+      function renderSystemTreeSettings() {
+        const container = document.getElementById('systemTreeSettingsContainer');
+        const payload = state.systemTreeSettings;
+        if (!payload || !Array.isArray(payload.trees) || !payload.trees.length) {
+          container.innerHTML = '<div class="small">暂无系统树设置。</div>';
+          renderDashboardSummary();
+          return;
+        }
+
+        container.innerHTML = payload.trees.map((tree) => `
+          <div class="system-tree-card">
+            <div class="system-tree-card-head">
+              <div class="entity-title-row">
+                <strong>${escapeHtml(tree.title || '-')}</strong>
+                ${renderPill(getTreeTypeLabel(tree), 'system')}
+                ${renderPill('后端规则驱动', 'system')}
+              </div>
+              <div class="small" style="margin-top: 6px;">
+                ${escapeHtml(tree.chapter_desc || '当前未填写章节描述')}
+              </div>
+            </div>
+
+            <div class="system-tree-meta-grid">
+              <div><strong>树 ID：</strong>${escapeHtml(tree.tree_id || '-')}</div>
+              <div><strong>systemKey：</strong>${escapeHtml(tree.system_key || '-')}</div>
+              <div><strong>规则摘要：</strong>${escapeHtml(tree.rule_summary_text || (tree.completion_threshold == null ? '无' : formatPercent(tree.completion_threshold)))}</div>
+              <div><strong>积分摘要：</strong>${escapeHtml(tree.reward_summary_text || (tree.reward_points ? `+${String(tree.reward_points)} 分` : '无'))}</div>
+            </div>
+
+            <div class="system-rule-list">
+              ${(tree.rules || []).map((rule) => `
+                <div class="system-rule-item">
+                  <div class="small">${escapeHtml(rule.label || '')}</div>
+                  <div>${escapeHtml(rule.value || '')}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="small" style="margin-top: 12px;">
+              这里展示的是当前系统树内固定保留的根节点。像“输入输出树”这类历史默认子树现在按普通节点处理，可在“节点管理”里直接删除或重组。
+            </div>
+
+            <div class="system-node-table-wrap">
+              <table class="system-node-table">
+                <thead>
+                  <tr>
+                    <th>节点路径</th>
+                    <th>作用</th>
+                    <th>排序</th>
+                    <th>systemKey</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(tree.nodes || []).length ? (tree.nodes || []).map((node) => `
+                    <tr>
+                      <td>${escapeHtml(node.path || node.name || '-')}</td>
+                      <td>${escapeHtml(getSystemNodeRole(node))}</td>
+                      <td>${escapeHtml(String(node.sort_order || 0))}</td>
+                      <td>${escapeHtml(node.system_key || '-')}</td>
+                    </tr>
+                  `).join('') : `
+                    <tr>
+                      <td colspan="4" class="small">当前没有可展示的系统节点。</td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `).join('');
+        renderDashboardSummary();
+      }
+
+      function updateNodeFormHint() {
+        const hintEl = document.getElementById('nodeFormHint');
+        const tree = state.trees.find((item) => item.id === state.selectedTreeId);
+        if (!tree) {
+          hintEl.textContent = '请选择学习树后继续添加节点。';
+          return;
+        }
+        if (isSystemTree(tree)) {
+          hintEl.textContent = '当前是系统树：只有根节点不能删除，其他子节点都可调整。';
+          return;
+        }
+        hintEl.textContent = '当前是自定义学习树：可新增或编辑节点，并设置父子关系与解锁条件。';
       }
 
       async function checkTeacherSession() {
@@ -340,17 +1730,20 @@
         try {
           state.teacher = await api('/api/teacher/me');
           refreshDashboardVisibility();
-          await refreshAllData();
         } catch (_err) {
-          teacherToken = '';
-          localStorage.removeItem(TEACHER_TOKEN_KEY);
-          state.teacher = null;
-          refreshDashboardVisibility();
+          clearTeacherSession();
+          return;
+        }
+
+        try {
+          await refreshAllData();
+        } catch (err) {
+          showNotice(`已登录，但后台数据加载失败：${err.message}`, 'error');
         }
       }
 
       async function refreshAllData() {
-        await Promise.all([loadStudents(), loadTrees()]);
+        await Promise.all([loadStudents(), loadTrees(), loadSystemTreeSettings()]);
         await loadNodesForSelectedTree();
         renderScoreSelectors();
       }
@@ -358,28 +1751,74 @@
       async function loadStudents() {
         state.students = await api('/api/students');
         renderStudents();
+        renderDashboardSummary();
+      }
+
+      function getFilteredStudents() {
+        const keyword = String(state.studentSearchKeyword || '').trim().toLowerCase();
+        if (!keyword) {
+          return state.students;
+        }
+        return state.students.filter((student) => {
+          const haystack = [
+            student.id,
+            student.username,
+            student.name,
+            `lv.${student.level || 0}`,
+            String(student.total_points || 0),
+          ].join(' ').toLowerCase();
+          return haystack.includes(keyword);
+        });
+      }
+
+      async function loadSystemTreeSettings() {
+        state.systemTreeSettings = await api('/api/system-tree-settings');
+        renderSystemTreeSettings();
       }
 
       function renderStudents() {
         const tbody = document.getElementById('studentsTbody');
+        const summaryEl = document.getElementById('studentSearchSummary');
+        const filteredStudents = getFilteredStudents();
+        const keyword = String(state.studentSearchKeyword || '').trim();
         tbody.innerHTML = '';
 
-        state.students.forEach((student) => {
+        summaryEl.textContent = keyword
+          ? `共 ${state.students.length} 名学生，当前匹配 ${filteredStudents.length} 名。`
+          : `当前共有 ${state.students.length} 名学生。`;
+
+        if (!filteredStudents.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td colspan="7" class="small">${keyword ? '没有找到匹配的学生。' : '当前还没有学生。'}</td>`;
+          tbody.appendChild(tr);
+          renderStudentPetFrameEditor();
+          return;
+        }
+
+        filteredStudents.forEach((student) => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${student.id}</td>
             <td>${student.username}</td>
             <td>${student.name || ''}</td>
+            <td>
+              <input data-field="student-level" type="number" min="0" step="1" value="${student.level || 0}" style="width: 88px;" />
+              ${student.manual_level_override_active ? '<div class="small">手动等级</div>' : '<div class="small">自动等级</div>'}
+            </td>
+            <td><input data-field="student-points" type="number" min="0" step="1" value="${student.total_points || 0}" style="width: 100px;" /></td>
             <td>${student.wechat_openid ? '已绑定' : '未绑定'}</td>
             <td>
               <div class="actions">
-                <button data-action="edit">编辑</button>
+                <button data-action="edit">编辑资料</button>
+                <button data-action="save-metrics" class="primary">保存数值</button>
+                <button data-action="pet-frames">宠物帧</button>
+                ${student.manual_level_override_active ? '<button data-action="restore-auto">恢复自动等级</button>' : ''}
                 <button data-action="delete" class="danger">删除</button>
               </div>
             </td>
           `;
 
-          tr.querySelector('[data-action="edit"]').onclick = async () => {
+          tr.querySelector('[data-action="edit"]').onclick = async (event) => {
             const username = prompt('新用户名（留空则不改）', student.username);
             if (username === null) return;
             const name = prompt('姓名（可留空）', student.name || '');
@@ -387,93 +1826,203 @@
             const password = prompt('新密码（留空表示不修改）', '');
             if (password === null) return;
 
-            await api(`/api/students/${student.id}`, {
-              method: 'PUT',
-              body: {
-                username: username.trim() || student.username,
-                name,
-                password,
-              },
+            await withButtonBusy(event.currentTarget, '保存中...', async () => {
+              await api(`/api/students/${student.id}`, {
+                method: 'PUT',
+                body: {
+                  username: username.trim() || student.username,
+                  name,
+                  password,
+                },
+              });
+              showNotice('学生资料已更新');
+              await loadStudents();
+              renderScoreSelectors();
             });
-            showNotice('学生信息已更新');
-            await loadStudents();
-            renderScoreSelectors();
           };
 
-          tr.querySelector('[data-action="delete"]').onclick = async () => {
+          tr.querySelector('[data-action="save-metrics"]').onclick = async (event) => {
+            const levelValue = tr.querySelector('[data-field="student-level"]').value;
+            const pointsValue = tr.querySelector('[data-field="student-points"]').value;
+            await withButtonBusy(event.currentTarget, '保存中...', async () => {
+              await api(`/api/students/${student.id}`, {
+                method: 'PUT',
+                body: {
+                  level: levelValue === '' ? 0 : Number(levelValue),
+                  totalPoints: pointsValue === '' ? 0 : Number(pointsValue),
+                },
+              });
+              showNotice(`已更新 ${student.username} 的等级和积分`);
+              await loadStudents();
+              renderScoreSelectors();
+            });
+          };
+
+          const restoreAutoButton = tr.querySelector('[data-action="restore-auto"]');
+          if (restoreAutoButton) {
+            restoreAutoButton.onclick = async (event) => {
+              await withButtonBusy(event.currentTarget, '恢复中...', async () => {
+                await api(`/api/students/${student.id}`, {
+                  method: 'PUT',
+                  body: {
+                    levelMode: 'auto',
+                  },
+                });
+                showNotice(`已恢复 ${student.username} 的自动等级结算`);
+                await loadStudents();
+                renderScoreSelectors();
+              });
+            };
+          }
+
+          tr.querySelector('[data-action="pet-frames"]').onclick = async (event) => {
+            try {
+              await withButtonBusy(event.currentTarget, '加载中...', async () => {
+                await openStudentPetFrameEditor(student);
+                showNotice(`已打开 ${student.username} 的宠物帧编辑器`);
+              });
+            } catch (err) {
+              showNotice(err.message, 'error');
+            }
+          };
+
+          tr.querySelector('[data-action="delete"]').onclick = async (event) => {
             if (!confirm(`确定删除学生 ${student.username} 吗？`)) return;
-            await api(`/api/students/${student.id}`, { method: 'DELETE' });
-            showNotice('学生已删除');
-            await loadStudents();
-            renderScoreSelectors();
+            await withButtonBusy(event.currentTarget, '删除中...', async () => {
+              await api(`/api/students/${student.id}`, { method: 'DELETE' });
+              if (String(state.petFrameEditorStudentId) === String(student.id)) {
+                resetStudentPetFrameEditor();
+              }
+              showNotice('学生已删除');
+              await loadStudents();
+              renderScoreSelectors();
+            });
           };
 
           tbody.appendChild(tr);
         });
+        renderStudentPetFrameEditor();
       }
 
       async function loadTrees() {
         state.trees = await api('/api/trees');
-        renderTrees();
-
         if (state.trees.length === 0) {
           state.selectedTreeId = null;
         } else if (!state.selectedTreeId || !state.trees.some((x) => x.id === state.selectedTreeId)) {
           state.selectedTreeId = state.trees[0].id;
         }
 
+        renderTrees();
         renderActiveTreeLabel();
+        renderDashboardSummary();
+      }
+
+      function getFilteredTrees() {
+        const keyword = String(state.treeSearchKeyword || '').trim().toLowerCase();
+        if (!keyword) {
+          return state.trees;
+        }
+        return state.trees.filter((tree) => {
+          const haystack = [
+            tree.id,
+            tree.title,
+            tree.chapter_desc,
+            getTreeTypeLabel(tree),
+          ].join(' ').toLowerCase();
+          return haystack.includes(keyword);
+        });
       }
 
       function renderTrees() {
         const tbody = document.getElementById('treesTbody');
+        const summaryEl = document.getElementById('treeSearchSummary');
+        const searchInput = document.getElementById('treeSearchInput');
+        const clearButton = document.getElementById('clearTreeSearchBtn');
+        const filteredTrees = getFilteredTrees();
+        const keyword = String(state.treeSearchKeyword || '').trim();
         tbody.innerHTML = '';
+        searchInput.value = state.treeSearchKeyword || '';
+        clearButton.disabled = !state.trees.length;
+        summaryEl.textContent = keyword
+          ? `共 ${state.trees.length} 棵学习树，当前匹配 ${filteredTrees.length} 棵。`
+          : `当前共有 ${state.trees.length} 棵学习树。`;
 
-        state.trees.forEach((tree) => {
+        if (!filteredTrees.length) {
           const tr = document.createElement('tr');
+          tr.innerHTML = `<td colspan="4" class="small">${keyword ? '没有匹配的学习树。' : '当前还没有学习树。'}</td>`;
+          tbody.appendChild(tr);
+          return;
+        }
+
+        filteredTrees.forEach((tree) => {
+          const actionLabel = '编辑';
+          const tr = document.createElement('tr');
+          if (String(tree.id) === String(state.selectedTreeId)) {
+            tr.classList.add('is-active-row');
+          }
           tr.innerHTML = `
-            <td>${tree.id}</td>
-            <td>${tree.title}</td>
+            <td title="${escapeHtml(String(tree.id))}">${escapeHtml(formatShortNodeId(tree.id))}</td>
+            <td>
+              <div class="entity-title-row">
+                <span>${escapeHtml(tree.title)}</span>
+                ${renderPill(getTreeTypeLabel(tree), isSystemTree(tree) ? 'system' : '')}
+                ${isSystemTree(tree) ? renderPill('系统树', 'system') : ''}
+              </div>
+              ${tree.chapter_desc ? `<div class="small" style="margin-top: 6px;">${escapeHtml(tree.chapter_desc)}</div>` : ''}
+            </td>
             <td>${tree.knowledge_count}</td>
             <td>
               <div class="actions">
                 <button data-action="select">选择</button>
-                <button data-action="edit">编辑</button>
-                <button data-action="delete" class="danger">删除</button>
+                <button data-action="edit">${actionLabel}</button>
+                ${isSystemTree(tree) ? '' : '<button data-action="delete" class="danger">删除</button>'}
               </div>
             </td>
           `;
 
-          tr.querySelector('[data-action="select"]').onclick = async () => {
-            state.selectedTreeId = tree.id;
-            renderActiveTreeLabel();
-            await loadNodesForSelectedTree();
-            renderScoreSelectors();
+          tr.querySelector('[data-action="select"]').onclick = async (event) => {
+            await withButtonBusy(event.currentTarget, '切换中...', async () => {
+              state.selectedTreeId = tree.id;
+              renderActiveTreeLabel();
+              await loadNodesForSelectedTree();
+              renderScoreSelectors();
+              renderTrees();
+              showNotice(`已切换到学习树：${tree.title}`);
+            });
           };
 
-          tr.querySelector('[data-action="edit"]').onclick = async () => {
+          tr.querySelector('[data-action="edit"]').onclick = async (event) => {
             const title = prompt('章节标题', tree.title);
             if (title === null) return;
             const chapterDesc = prompt('章节描述', tree.chapter_desc || '');
             if (chapterDesc === null) return;
-            await api(`/api/trees/${tree.id}`, {
-              method: 'PUT',
-              body: { title, chapterDesc },
+            await withButtonBusy(event.currentTarget, '保存中...', async () => {
+              await api(`/api/trees/${tree.id}`, {
+                method: 'PUT',
+                body: { title, chapterDesc },
+              });
+              showNotice(isSystemTree(tree) ? '系统树已更新' : '学习树已更新');
+              await loadTrees();
+              await loadSystemTreeSettings();
+              renderScoreSelectors();
             });
-            showNotice('学习树已更新');
-            await loadTrees();
-            renderScoreSelectors();
           };
 
-          tr.querySelector('[data-action="delete"]').onclick = async () => {
-            if (!confirm(`确定删除学习树「${tree.title}」吗？这会删除其全部节点和评分。`)) return;
-            await api(`/api/trees/${tree.id}`, { method: 'DELETE' });
-            state.nodesByTree.delete(tree.id);
-            showNotice('学习树已删除');
-            await loadTrees();
-            await loadNodesForSelectedTree();
-            renderScoreSelectors();
-          };
+          const deleteBtn = tr.querySelector('[data-action="delete"]');
+          if (deleteBtn) {
+            deleteBtn.onclick = async (event) => {
+              if (!confirm(`确定删除学习树「${tree.title}」吗？这会删除其全部节点和评分。`)) return;
+              await withButtonBusy(event.currentTarget, '删除中...', async () => {
+                await api(`/api/trees/${tree.id}`, { method: 'DELETE' });
+                state.nodesByTree.delete(tree.id);
+                showNotice('学习树已删除');
+                await loadTrees();
+                await loadSystemTreeSettings();
+                await loadNodesForSelectedTree();
+                renderScoreSelectors();
+              });
+            };
+          }
 
           tbody.appendChild(tr);
         });
@@ -482,116 +2031,335 @@
       function renderActiveTreeLabel() {
         const tree = state.trees.find((t) => t.id === state.selectedTreeId);
         document.getElementById('activeTreeLabel').textContent = tree
-          ? `${tree.title} (ID: ${tree.id})`
+          ? `${tree.title} (${getTreeTypeLabel(tree)} / ${formatShortNodeId(tree.id)}${isSystemTree(tree) ? ' / 系统树' : ''})`
           : '未选择';
+        updateNodeFormHint();
+        renderDashboardSummary();
+      }
+
+      function getFilteredOrderedNodes(nodes) {
+        const ordered = toTreeOrdered(nodes || []);
+        const keyword = String(state.nodeSearchKeyword || '').trim().toLowerCase();
+        if (!keyword) {
+          return ordered;
+        }
+        return ordered.filter(({ node }) => String(node.name || '').toLowerCase().includes(keyword));
+      }
+
+      function buildNodeUpdatePayload(node, overrides = {}) {
+        const payload = {
+          parentId: node.parent_id,
+          name: node.name,
+          sortOrder: Number(node.sort_order || 0),
+          milestoneLevel: Number(node.milestone_level || 0),
+          requiredLevel: Number(node.required_level || 0),
+          unlockPrerequisites: getNodeUnlockPrerequisites(node),
+          unlockPrerequisiteMode: getNodeUnlockPrerequisiteMode(node),
+        };
+        const problemAttachments = getNodeProblemAttachments(node);
+        if (problemAttachments.length) {
+          payload.problemAttachments = problemAttachments;
+        }
+        return Object.assign(payload, overrides);
+      }
+
+      async function moveNodeWithinSiblings(nodeId, step) {
+        const nodes = getSelectedTreeNodes();
+        const currentNode = getNodeById(nodes, nodeId);
+        if (!currentNode) {
+          return false;
+        }
+        const siblingKey = currentNode.parent_id === null || currentNode.parent_id === undefined
+          ? 'root'
+          : String(currentNode.parent_id);
+        const siblingGroups = new Map();
+        nodes.forEach((node) => {
+          const key = node.parent_id === null || node.parent_id === undefined ? 'root' : String(node.parent_id);
+          if (!siblingGroups.has(key)) {
+            siblingGroups.set(key, []);
+          }
+          siblingGroups.get(key).push(node);
+        });
+        const siblings = (siblingGroups.get(siblingKey) || [])
+          .slice()
+          .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0) || String(a.id).localeCompare(String(b.id)));
+        const currentIndex = siblings.findIndex((node) => String(node.id) === String(nodeId));
+        const targetIndex = currentIndex + step;
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= siblings.length) {
+          return false;
+        }
+        const reordered = siblings.slice();
+        const temp = reordered[currentIndex];
+        reordered[currentIndex] = reordered[targetIndex];
+        reordered[targetIndex] = temp;
+        const changed = reordered
+          .map((node, index) => ({ node, sortOrder: (index + 1) * 10 }))
+          .filter((item) => Number(item.node.sort_order || 0) !== item.sortOrder);
+        if (!changed.length) {
+          return false;
+        }
+        await Promise.all(changed.map(({ node, sortOrder }) => api(`/api/nodes/${node.id}`, {
+          method: 'PUT',
+          body: buildNodeUpdatePayload(node, { sortOrder }),
+        })));
+        return true;
+      }
+
+      function renderNodesTable(nodes) {
+        const tbody = document.getElementById('nodesTbody');
+        const searchSummary = document.getElementById('nodeSearchSummary');
+        const ordered = getFilteredOrderedNodes(nodes || []);
+        const keyword = String(state.nodeSearchKeyword || '').trim();
+        const siblingOrderMap = getSiblingOrderMap(nodes || []);
+        const siblingGroups = new Map();
+        (nodes || []).forEach((node) => {
+          const key = node.parent_id === null || node.parent_id === undefined ? 'root' : String(node.parent_id);
+          if (!siblingGroups.has(key)) {
+            siblingGroups.set(key, []);
+          }
+          siblingGroups.get(key).push(node);
+        });
+        siblingGroups.forEach((items) => {
+          items.sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0) || String(a.id).localeCompare(String(b.id)));
+        });
+        tbody.innerHTML = '';
+
+        if (!nodes || !nodes.length) {
+          searchSummary.textContent = '当前学习树暂无节点。';
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="5" class="small">暂无节点</td>';
+          tbody.appendChild(tr);
+          return;
+        }
+
+        searchSummary.textContent = keyword
+          ? `共 ${nodes.length} 个节点，当前匹配 ${ordered.length} 个。`
+          : `共 ${nodes.length} 个节点。`;
+
+        if (!ordered.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="5" class="small">没有匹配的节点，请换个名称试试。</td>';
+          tbody.appendChild(tr);
+          return;
+        }
+
+        ordered.forEach(({ node, depth }) => {
+          const canDelete = node.parent_id !== null && !isSystemNode(node);
+          const siblingKey = node.parent_id === null || node.parent_id === undefined ? 'root' : String(node.parent_id);
+          const siblings = siblingGroups.get(siblingKey) || [];
+          const currentIndex = siblings.findIndex((item) => String(item.id) === String(node.id));
+          const canMoveUp = currentIndex > 0;
+          const canMoveDown = currentIndex >= 0 && currentIndex < siblings.length - 1;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span title="${escapeHtml(String(node.id))}">${escapeHtml(formatShortNodeId(node.id))}</span></td>
+            <td>
+              <span class="node-level">${'&nbsp;&nbsp;'.repeat(depth)}${depth > 0 ? '└ ' : ''}</span>${escapeHtml(node.name)}
+              <div class="small" style="margin-top: 4px;">同级序号：${escapeHtml(String(siblingOrderMap.get(String(node.id)) || 1))}</div>
+              ${renderNodeMeta(node)}
+            </td>
+            <td>${node.parent_id === null ? '-' : `<span title="${escapeHtml(String(node.parent_id))}">${escapeHtml(formatShortNodeId(node.parent_id))}</span>`}</td>
+            <td>
+              <div class="sort-editor">
+                <input data-field="sort-order" type="number" step="1" value="${escapeHtml(String(node.sort_order || 0))}" />
+                <button data-action="save-sort" class="primary">保存排序</button>
+              </div>
+            </td>
+            <td>
+              <div class="actions">
+                <button data-action="move-up" ${canMoveUp ? '' : 'disabled'}>上移</button>
+                <button data-action="move-down" ${canMoveDown ? '' : 'disabled'}>下移</button>
+                <button data-action="edit">编辑</button>
+                ${canDelete ? '<button data-action="delete" class="danger">删除</button>' : ''}
+              </div>
+            </td>
+          `;
+
+          tr.querySelector('[data-action="edit"]').onclick = () => {
+            startNodeEdit(node);
+            showNotice(`已载入节点「${node.name}」的编辑表单`);
+          };
+
+          const saveSortBtn = tr.querySelector('[data-action="save-sort"]');
+          if (saveSortBtn) {
+            saveSortBtn.onclick = async (event) => {
+              const nextSortOrder = Number(tr.querySelector('[data-field="sort-order"]').value || 0);
+              if (!Number.isFinite(nextSortOrder)) {
+                showNotice('排序必须是数字', 'error');
+                return;
+              }
+              await withButtonBusy(event.currentTarget, '保存中...', async () => {
+                await api(`/api/nodes/${node.id}`, {
+                  method: 'PUT',
+                  body: buildNodeUpdatePayload(node, { sortOrder: nextSortOrder }),
+                });
+                showNotice(`已更新节点排序：${node.name}`);
+                await loadNodesForSelectedTree();
+              });
+            };
+          }
+
+          const moveUpBtn = tr.querySelector('[data-action="move-up"]');
+          if (moveUpBtn) {
+            moveUpBtn.onclick = async (event) => {
+              await withButtonBusy(event.currentTarget, '上移中...', async () => {
+                const changed = await moveNodeWithinSiblings(node.id, -1);
+                if (!changed) {
+                  return;
+                }
+                showNotice(`已上移节点：${node.name}`);
+                await loadNodesForSelectedTree();
+              });
+            };
+          }
+
+          const moveDownBtn = tr.querySelector('[data-action="move-down"]');
+          if (moveDownBtn) {
+            moveDownBtn.onclick = async (event) => {
+              await withButtonBusy(event.currentTarget, '下移中...', async () => {
+                const changed = await moveNodeWithinSiblings(node.id, 1);
+                if (!changed) {
+                  return;
+                }
+                showNotice(`已下移节点：${node.name}`);
+                await loadNodesForSelectedTree();
+              });
+            };
+          }
+
+          const deleteBtn = tr.querySelector('[data-action="delete"]');
+          if (deleteBtn) {
+            deleteBtn.onclick = async (event) => {
+              if (!confirm(`确定删除节点「${node.name}」及其全部子节点吗？`)) return;
+              await withButtonBusy(event.currentTarget, '删除中...', async () => {
+                await api(`/api/nodes/${node.id}`, { method: 'DELETE' });
+                showNotice('节点已删除');
+                await loadNodesForSelectedTree();
+                await loadSystemTreeSettings();
+              });
+            };
+          }
+
+          tbody.appendChild(tr);
+        });
       }
 
       async function loadNodesForSelectedTree() {
         const treeId = state.selectedTreeId;
         const tbody = document.getElementById('nodesTbody');
         const parentSelect = document.getElementById('nodeParentSelect');
+        const parentSearchInput = document.getElementById('nodeParentSearchInput');
+        const clearParentSearchBtn = document.getElementById('clearNodeParentSearchBtn');
+        const prereqSearchInput = document.getElementById('nodePrereqSearchInput');
+        const clearPrereqSearchBtn = document.getElementById('clearNodePrereqSearchBtn');
         const mindmap = document.getElementById('mindmapView');
+        const searchInput = document.getElementById('nodeSearchInput');
+        const clearSearchBtn = document.getElementById('clearNodeSearchBtn');
+        const searchSummary = document.getElementById('nodeSearchSummary');
         tbody.innerHTML = '';
         parentSelect.innerHTML = '';
+        searchInput.value = state.nodeSearchKeyword || '';
+        parentSearchInput.value = state.nodeParentSearchKeyword || '';
+        prereqSearchInput.value = state.nodePrereqSearchKeyword || '';
+        searchInput.disabled = !treeId;
+        clearSearchBtn.disabled = !treeId;
+        parentSearchInput.disabled = !treeId;
+        clearParentSearchBtn.disabled = !treeId;
+        prereqSearchInput.disabled = !treeId;
+        clearPrereqSearchBtn.disabled = !treeId;
 
         if (!treeId) {
           mindmap.innerHTML = '<span class="small">请先选择学习树</span>';
+          searchSummary.textContent = '请先选择学习树。';
+          state.nodeFormEditingId = null;
+          state.nodeFormPrerequisites = [];
+          state.nodeFormPrerequisiteMode = 'all';
+          state.nodeFormExistingProblemAttachments = [];
+          state.nodeFormPendingProblemAttachments = [];
+          renderNodeFormMode();
+          renderNodeParentOptions();
+          renderNodePrerequisiteSourceOptions();
+          renderNodePrerequisiteList();
+          renderNodeProblemAttachmentState();
+          updateNodeFormHint();
+          renderDashboardSummary();
           return;
         }
 
         const nodes = await api(`/api/trees/${treeId}/nodes`);
         state.nodesByTree.set(treeId, nodes);
         renderMindmap(nodes);
-
-        const ordered = toTreeOrdered(nodes);
-        const idNameMap = new Map(nodes.map((n) => [n.id, n.name]));
-
-        ordered.forEach(({ node, depth }) => {
-          const option = document.createElement('option');
-          option.value = String(node.id);
-          option.textContent = `${'  '.repeat(depth)}${depth > 0 ? '└ ' : ''}${node.name} (ID:${node.id})`;
-          parentSelect.appendChild(option);
-
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${node.id}</td>
-            <td><span class="node-level">${'&nbsp;&nbsp;'.repeat(depth)}${depth > 0 ? '└ ' : ''}</span>${node.name}</td>
-            <td>${node.parent_id || '-'}</td>
-            <td>${node.sort_order}</td>
-            <td>
-              <div class="actions">
-                <button data-action="edit">编辑</button>
-                ${node.parent_id === null ? '' : '<button data-action="delete" class="danger">删除</button>'}
-              </div>
-            </td>
-          `;
-
-          tr.querySelector('[data-action="edit"]').onclick = async () => {
-            const name = prompt('节点名称', node.name);
-            if (name === null) return;
-            const sortOrder = prompt('排序（整数）', String(node.sort_order));
-            if (sortOrder === null) return;
-
-            let parentPrompt = String(node.parent_id || '');
-            if (node.parent_id !== null) {
-              parentPrompt = prompt('父节点ID（不能为空）', String(node.parent_id));
-              if (parentPrompt === null) return;
-            }
-
-            await api(`/api/nodes/${node.id}`, {
-              method: 'PUT',
-              body: {
-                name,
-                sortOrder: Number(sortOrder),
-                parentId: node.parent_id === null ? null : String(parentPrompt).trim(),
-              },
-            });
-            showNotice(`节点已更新：${name}`);
-            await loadNodesForSelectedTree();
-          };
-
-          const deleteBtn = tr.querySelector('[data-action="delete"]');
-          if (deleteBtn) {
-            deleteBtn.onclick = async () => {
-              if (!confirm(`确定删除节点「${node.name}」及其全部子节点吗？`)) return;
-              await api(`/api/nodes/${node.id}`, { method: 'DELETE' });
-              showNotice('节点已删除');
-              await loadNodesForSelectedTree();
-            };
-          }
-
-          tbody.appendChild(tr);
-        });
-
-        if (parentSelect.options.length > 0) {
-          parentSelect.value = parentSelect.options[0].value;
-        }
+        renderNodeParentOptions();
+        renderNodesTable(nodes);
+        syncNodeFormAfterNodesLoaded();
+        renderDashboardSummary();
       }
 
       function renderScoreSelectors() {
         const studentSelect = document.getElementById('scoreStudentSelect');
         const treeSelect = document.getElementById('scoreTreeSelect');
+        const studentSearchInput = document.getElementById('scoreStudentSearchInput');
+        const treeSearchInput = document.getElementById('scoreTreeSearchInput');
+        const prevStudentId = studentSelect.value;
+        const prevTreeId = treeSelect.value;
+        const studentKeyword = String(state.scoreStudentSearchKeyword || '').trim().toLowerCase();
+        const treeKeyword = String(state.scoreTreeSearchKeyword || '').trim().toLowerCase();
 
         studentSelect.innerHTML = '';
         treeSelect.innerHTML = '';
+        studentSearchInput.value = state.scoreStudentSearchKeyword || '';
+        treeSearchInput.value = state.scoreTreeSearchKeyword || '';
 
-        state.students.forEach((student) => {
+        const filteredStudents = state.students.filter((student) => {
+          if (!studentKeyword) {
+            return true;
+          }
+          const haystack = [
+            student.id,
+            student.username,
+            student.name,
+            `lv.${student.level || 0}`,
+            String(student.total_points || 0),
+          ].join(' ').toLowerCase();
+          return haystack.includes(studentKeyword);
+        });
+
+        filteredStudents.forEach((student) => {
           const opt = document.createElement('option');
           opt.value = String(student.id);
-          opt.textContent = `${student.username}${student.name ? ` (${student.name})` : ''}`;
+          opt.textContent = `${student.username}${student.name ? ` (${student.name})` : ''} / Lv.${student.level || 0} / 积分 ${student.total_points || 0}`;
           studentSelect.appendChild(opt);
         });
 
-        state.trees.forEach((tree) => {
+        const filteredTrees = state.trees.filter((tree) => {
+          if (!treeKeyword) {
+            return true;
+          }
+          const haystack = [
+            tree.id,
+            tree.title,
+            tree.chapter_desc,
+            getTreeTypeLabel(tree),
+          ].join(' ').toLowerCase();
+          return haystack.includes(treeKeyword);
+        });
+
+        filteredTrees.forEach((tree) => {
           const opt = document.createElement('option');
           opt.value = String(tree.id);
-          opt.textContent = `${tree.title} (ID:${tree.id})`;
+          opt.textContent = `${tree.title} / ${getTreeTypeLabel(tree)}`;
           treeSelect.appendChild(opt);
         });
 
-        if (state.selectedTreeId) {
+        if (prevStudentId && filteredStudents.some((item) => String(item.id) === String(prevStudentId))) {
+          studentSelect.value = String(prevStudentId);
+        }
+        if (prevTreeId && filteredTrees.some((item) => String(item.id) === String(prevTreeId))) {
+          treeSelect.value = String(prevTreeId);
+        } else if (state.selectedTreeId && filteredTrees.some((item) => String(item.id) === String(state.selectedTreeId))) {
           treeSelect.value = String(state.selectedTreeId);
         }
+        renderDashboardSummary();
       }
 
       function buildNodePathMap(nodes) {
@@ -630,6 +2398,251 @@
           .replace(/'/g, '&#39;');
       }
 
+      const NODE_PROBLEM_ATTACHMENT_ALLOWED_MIME_TYPES = new Set(['application/pdf', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
+      const NODE_PROBLEM_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
+
+      function getProblemAttachmentKindFromMimeType(mimeType = '') {
+        const value = String(mimeType || '').toLowerCase();
+        if (value === 'application/pdf') {
+          return 'pdf';
+        }
+        if (value.startsWith('image/')) {
+          return 'image';
+        }
+        return '';
+      }
+
+      function getProblemAttachmentMimeTypeFromFile(file) {
+        const lowerName = String(file && file.name || '').toLowerCase();
+        const fallbackMimeType = lowerName.endsWith('.pdf')
+          ? 'application/pdf'
+          : (lowerName.endsWith('.png')
+            ? 'image/png'
+            : ((lowerName.endsWith('.webp'))
+              ? 'image/webp'
+              : ((lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) ? 'image/jpeg' : '')));
+        const mimeType = String((file && file.type) || fallbackMimeType || '').toLowerCase();
+        return mimeType === 'image/jpg' ? 'image/jpeg' : mimeType;
+      }
+
+      function validateNodeProblemFile(file) {
+        const mimeType = getProblemAttachmentMimeTypeFromFile(file);
+        if (!NODE_PROBLEM_ATTACHMENT_ALLOWED_MIME_TYPES.has(mimeType)) {
+          throw new Error('题目资料只支持 PDF、PNG、JPG、JPEG、WEBP');
+        }
+        if (Number((file && file.size) || 0) > NODE_PROBLEM_ATTACHMENT_MAX_BYTES) {
+          throw new Error('单个题目资料不能超过 10MB');
+        }
+        return mimeType;
+      }
+
+      function createNodeProblemPendingAttachment(file) {
+        const mimeType = validateNodeProblemFile(file);
+        const fallbackName = String(file && file.name || '题目资料').replace(/\.[^.]+$/, '') || '题目资料';
+        return {
+          key: `pending-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          file,
+          mimeType,
+          displayName: fallbackName,
+        };
+      }
+
+      function getNodeProblemAttachments(node) {
+        const rawList = Array.isArray(node && (node.problem_attachments || node.problemAttachments))
+          ? (node.problem_attachments || node.problemAttachments)
+          : [];
+        const normalized = rawList
+          .map((item) => {
+            const fileId = normalizeNodeIdValue(item.file_id ?? item.fileId);
+            const fileName = String(item.file_name ?? item.fileName ?? '').trim();
+            const displayName = String((item.display_name ?? item.displayName ?? fileName ?? '题目资料')).trim() || (fileName || '题目资料');
+            const mimeType = String(item.mime_type ?? item.mimeType ?? '').trim();
+            const url = String(item.url || '').trim();
+            const kind = String(item.kind || '').trim() || getProblemAttachmentKindFromMimeType(mimeType);
+            if (!fileId && !fileName && !url) {
+              return null;
+            }
+            return {
+              fileId,
+              fileName: fileName || '题目资料',
+              displayName,
+              mimeType,
+              url,
+              kind,
+              remove: false,
+            };
+          })
+          .filter(Boolean);
+
+        if (normalized.length) {
+          return normalized;
+        }
+
+        const fallbackUrl = String(node && (node.problem_attachment_url || node.problemAttachmentUrl) || '').trim();
+        const fallbackFileName = String(node && (node.problem_attachment_file_name || node.problemAttachmentFileName) || '').trim();
+        const fallbackDisplayName = String(node && (node.problem_attachment_display_name || node.problemAttachmentDisplayName) || fallbackFileName || '题目资料').trim();
+        const fallbackMimeType = String(node && (node.problem_attachment_mime_type || node.problemAttachmentMimeType) || '').trim();
+        const fallbackKind = String(node && (node.problem_attachment_kind || node.problemAttachmentKind) || '').trim() || getProblemAttachmentKindFromMimeType(fallbackMimeType);
+        const fallbackFileId = normalizeNodeIdValue(node && (node.problem_attachment_file_id || node.problemAttachmentFileId));
+        if (!fallbackUrl && !fallbackFileName && !fallbackMimeType && !fallbackFileId) {
+          return [];
+        }
+        return [{
+          fileId: fallbackFileId,
+          fileName: fallbackFileName || '题目资料',
+          displayName: fallbackDisplayName || fallbackFileName || '题目资料',
+          mimeType: fallbackMimeType,
+          url: fallbackUrl,
+          kind: fallbackKind,
+          remove: false,
+        }];
+      }
+
+      function renderNodeProblemAttachmentState() {
+        const summaryEl = document.getElementById('nodeProblemAttachmentSummary');
+        const existingListEl = document.getElementById('nodeProblemExistingList');
+        const pendingListEl = document.getElementById('nodeProblemPendingList');
+        const clearPendingBtn = document.getElementById('clearNodeProblemPendingBtn');
+        const existing = state.nodeFormExistingProblemAttachments || [];
+        const pending = state.nodeFormPendingProblemAttachments || [];
+        const keptExisting = existing.filter((item) => !item.remove);
+        const removingExisting = existing.filter((item) => item.remove);
+
+        if (!keptExisting.length && !pending.length) {
+          summaryEl.textContent = '当前未附带题目资料。';
+        } else {
+          const parts = [];
+          if (keptExisting.length) {
+            parts.push(`保留 ${keptExisting.length} 份现有资料`);
+          }
+          if (pending.length) {
+            parts.push(`待上传 ${pending.length} 份新资料`);
+          }
+          if (removingExisting.length) {
+            parts.push(`删除 ${removingExisting.length} 份现有资料`);
+          }
+          summaryEl.textContent = `当前资料变更：${parts.join('，')}。`;
+        }
+
+        existingListEl.innerHTML = existing.length
+          ? existing.map((item, index) => {
+            const typeLabel = item.kind === 'pdf'
+              ? 'PDF'
+              : (item.kind === 'image' ? '图片' : (item.mimeType || '附件'));
+            const linkHtml = item.url
+              ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.fileName)}</a>`
+              : `<strong>${escapeHtml(item.fileName)}</strong>`;
+            return `
+              <div class="feature-item">
+                <div class="small" style="margin-bottom: 8px;">现有资料 ${index + 1} / ${escapeHtml(typeLabel)}</div>
+                <div>${linkHtml}</div>
+                <label style="margin-top: 8px;">学生端显示名称</label>
+                <input data-existing-attachment-name="${index}" value="${escapeHtml(item.displayName || item.fileName)}" />
+                <label class="small" style="margin-top: 8px; display: block;">
+                  <input type="checkbox" data-existing-attachment-remove="${index}" ${item.remove ? 'checked' : ''} />
+                  保存时删除这份资料
+                </label>
+              </div>
+            `;
+          }).join('')
+          : '<div class="small">当前没有已保存的题目资料。</div>';
+
+        pendingListEl.innerHTML = pending.length
+          ? pending.map((item, index) => `
+              <div class="feature-item">
+                <div class="small" style="margin-bottom: 8px;">待上传资料 ${index + 1}</div>
+                <div><strong>${escapeHtml(item.file && item.file.name || '未选择文件')}</strong>${item.mimeType ? ` <span class="small">(${escapeHtml(item.mimeType)})</span>` : ''}</div>
+                <label style="margin-top: 8px;">学生端显示名称</label>
+                <input data-pending-attachment-name="${item.key}" value="${escapeHtml(item.displayName || '')}" />
+                <div class="form-actions" style="margin-top: 8px;">
+                  <button type="button" data-remove-pending-attachment="${item.key}">移除这份待上传资料</button>
+                </div>
+              </div>
+            `).join('')
+          : '<div class="small">当前没有待上传的新资料。</div>';
+
+        clearPendingBtn.hidden = !pending.length;
+
+        Array.from(existingListEl.querySelectorAll('[data-existing-attachment-name]')).forEach((input) => {
+          input.oninput = () => {
+            const index = Number(input.dataset.existingAttachmentName);
+            if (!Number.isInteger(index) || !state.nodeFormExistingProblemAttachments[index]) {
+              return;
+            }
+            state.nodeFormExistingProblemAttachments[index].displayName = input.value;
+          };
+        });
+
+        Array.from(existingListEl.querySelectorAll('[data-existing-attachment-remove]')).forEach((input) => {
+          input.onchange = () => {
+            const index = Number(input.dataset.existingAttachmentRemove);
+            if (!Number.isInteger(index) || !state.nodeFormExistingProblemAttachments[index]) {
+              return;
+            }
+            state.nodeFormExistingProblemAttachments[index].remove = !!input.checked;
+            renderNodeProblemAttachmentState();
+          };
+        });
+
+        Array.from(pendingListEl.querySelectorAll('[data-pending-attachment-name]')).forEach((input) => {
+          input.oninput = () => {
+            const key = String(input.dataset.pendingAttachmentName || '');
+            const item = state.nodeFormPendingProblemAttachments.find((entry) => entry.key === key);
+            if (!item) {
+              return;
+            }
+            item.displayName = input.value;
+          };
+        });
+
+        Array.from(pendingListEl.querySelectorAll('[data-remove-pending-attachment]')).forEach((button) => {
+          button.onclick = () => {
+            const key = String(button.dataset.removePendingAttachment || '');
+            state.nodeFormPendingProblemAttachments = state.nodeFormPendingProblemAttachments.filter((item) => item.key !== key);
+            renderNodeProblemAttachmentState();
+          };
+        });
+      }
+
+      async function buildNodeProblemAttachmentsPayload() {
+        const keptExisting = (state.nodeFormExistingProblemAttachments || [])
+          .filter((item) => !item.remove && item.fileId)
+          .map((item) => ({
+            fileId: item.fileId,
+            fileName: item.fileName,
+            mimeType: item.mimeType,
+            displayName: String(item.displayName || item.fileName || '题目资料').trim() || (item.fileName || '题目资料'),
+          }));
+
+        const pendingPayload = [];
+        for (const item of state.nodeFormPendingProblemAttachments || []) {
+          const file = item.file;
+          if (!file) {
+            continue;
+          }
+          const mimeType = item.mimeType || validateNodeProblemFile(file);
+          const base64 = await readFileAsDataUrl(file);
+          pendingPayload.push({
+            fileName: file.name || '题目资料',
+            mimeType,
+            displayName: String(item.displayName || file.name || '题目资料').trim() || (file.name || '题目资料'),
+            base64,
+            dataUrl: base64,
+          });
+        }
+
+        return keptExisting.concat(pendingPayload);
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('读取题目附件失败'));
+          reader.readAsDataURL(file);
+        });
+      }
+
       function formatDateTime(value) {
         if (!value) {
           return '-';
@@ -641,76 +2654,358 @@
         return date.toLocaleString('zh-CN', { hour12: false });
       }
 
+      function sortSubmissionRows(rows) {
+        return [...rows].sort((left, right) => {
+          return String(right.submitted_at || '').localeCompare(String(left.submitted_at || ''))
+            || String(right.id || '').localeCompare(String(left.id || ''));
+        });
+      }
+
+      function getReviewScore(value) {
+        if (value === null || value === undefined || value === '') {
+          return null;
+        }
+        const score = Number(value);
+        return Number.isNaN(score) ? null : score;
+      }
+
+      function hasReview(row) {
+        return !!(
+          row
+          && (row.scored_at
+            || (row.teacher_comment && String(row.teacher_comment).trim())
+            || getReviewScore(row.teacher_score) !== null)
+        );
+      }
+
+      function buildNodeProgressRows(treeNodes, submissionRows, studentLevel = 0) {
+        const childrenByParent = new Map();
+        treeNodes.forEach((node) => {
+          const key = String(node.parent_id || 'root');
+          if (!childrenByParent.has(key)) {
+            childrenByParent.set(key, []);
+          }
+          childrenByParent.get(key).push(node);
+        });
+        childrenByParent.forEach((items) => {
+          items.sort((left, right) => Number(left.sort_order || 0) - Number(right.sort_order || 0) || String(left.id || '').localeCompare(String(right.id || '')));
+        });
+
+        const requiredLevelByNodeId = new Map();
+        function walkRequiredLevels(node, inheritedRequiredLevel = 0) {
+          const requiredLevel = Number(node.required_level || 0) || inheritedRequiredLevel;
+          requiredLevelByNodeId.set(String(node.id), requiredLevel);
+          const children = childrenByParent.get(String(node.id)) || [];
+          children.forEach((child) => walkRequiredLevels(child, requiredLevel));
+        }
+
+        const submissionsByNode = new Map();
+        sortSubmissionRows(submissionRows).forEach((row) => {
+          const key = String(row.node_id);
+          if (!submissionsByNode.has(key)) {
+            submissionsByNode.set(key, []);
+          }
+          submissionsByNode.get(key).push(row);
+        });
+
+        const root = treeNodes.find((node) => node.parent_id === null) || null;
+        if (!root) {
+          return [];
+        }
+        walkRequiredLevels(root, 0);
+
+        const nodeMap = new Map();
+        treeNodes.forEach((node) => {
+          const history = submissionsByNode.get(String(node.id)) || [];
+          const latestSubmission = history[0] || null;
+          const latestReviewed = history.find((item) => hasReview(item)) || null;
+          const scoredValues = history
+            .map((item) => getReviewScore(item.teacher_score))
+            .filter((score) => score !== null);
+          const requiredLevel = Number(requiredLevelByNodeId.get(String(node.id)) || 0);
+
+          nodeMap.set(String(node.id), {
+            id: node.id,
+            name: node.name,
+            parent_id: node.parent_id,
+            sort_order: Number(node.sort_order || 0),
+            requiredLevel,
+            unlockPrerequisiteMode: getNodeUnlockPrerequisiteMode(node),
+            unlockPrerequisites: getNodeUnlockPrerequisites(node),
+            latestSubmission,
+            latestReviewed,
+            highestTeacherScore: scoredValues.length ? Math.max(...scoredValues) : null,
+            submissionCount: history.length,
+            baseUnlocked: requiredLevel <= 0 || Number(studentLevel || 0) >= requiredLevel,
+            baseLockedText: requiredLevel > 0 ? `达到 ${requiredLevel} 级后开放` : '',
+            prerequisitesUnlocked: true,
+            prerequisiteLockedText: '',
+            unlocked: true,
+            lockedText: '',
+            currentScore: 0,
+            totalScore: 0,
+            taskCount: 0,
+            children: [],
+          });
+        });
+
+        nodeMap.forEach((item) => {
+          if (item.parent_id === null) {
+            return;
+          }
+          const parent = nodeMap.get(String(item.parent_id));
+          if (parent) {
+            parent.children.push(item);
+          }
+        });
+
+        function getProgressRatioFromItem(item) {
+          if (!item || Number(item.totalScore || 0) <= 0) {
+            return 0;
+          }
+          return Number(item.currentScore || 0) / Number(item.totalScore || 0);
+        }
+
+        function applyUnlockState(item, ancestorUnlocked = true, inheritedLockedText = '') {
+          const unlocked = ancestorUnlocked && item.baseUnlocked && item.prerequisitesUnlocked;
+          let lockedText = '';
+          if (!unlocked) {
+            lockedText = !ancestorUnlocked
+              ? inheritedLockedText
+              : (item.baseUnlocked ? item.prerequisiteLockedText : item.baseLockedText);
+          }
+          item.unlocked = unlocked;
+          item.lockedText = lockedText || '';
+          item.children.forEach((child) => applyUnlockState(child, unlocked, item.lockedText));
+        }
+
+        function finalizeProgress(item) {
+          item.children.forEach(finalizeProgress);
+          const isRootNode = item.parent_id === null;
+          const isLeafTask = !isRootNode && item.children.length === 0;
+          const highestTeacherScore = item.highestTeacherScore;
+          const unlocked = !isLeafTask || item.unlocked;
+
+          item.isRoot = isRootNode;
+          item.isLeafTask = isLeafTask;
+          item.unlocked = unlocked;
+          item.currentScore = isLeafTask
+            ? (unlocked ? (highestTeacherScore === null ? 0 : highestTeacherScore) : 0)
+            : item.children.reduce((sum, child) => sum + child.currentScore, 0);
+          item.totalScore = isLeafTask
+            ? (unlocked ? 10 : 0)
+            : item.children.reduce((sum, child) => sum + child.totalScore, 0);
+          item.taskCount = isLeafTask
+            ? (unlocked ? 1 : 0)
+            : item.children.reduce((sum, child) => sum + child.taskCount, 0);
+        }
+
+        function recomputePrerequisiteState() {
+          let changed = false;
+          nodeMap.forEach((item) => {
+            const evaluatedRules = item.unlockPrerequisites
+              .map((rule) => {
+                const sourceNode = nodeMap.get(String(rule.source_node_id)) || null;
+                const met = getProgressRatioFromItem(sourceNode) >= (Number(rule.threshold_percent || 0) / 100);
+                return {
+                  met,
+                  sourceNode,
+                  thresholdPercent: Number(rule.threshold_percent || 0),
+                };
+              });
+            const unmetRules = evaluatedRules.filter((entry) => !entry.met);
+            const mode = item.unlockPrerequisiteMode === 'any' ? 'any' : 'all';
+            const prerequisitesUnlocked = item.unlockPrerequisites.length === 0
+              ? true
+              : (mode === 'any'
+                ? evaluatedRules.some((entry) => entry.met)
+                : unmetRules.length === 0);
+            const prerequisiteLockedText = prerequisitesUnlocked
+              ? ''
+              : formatPrerequisiteLockedText(unmetRules, mode);
+
+            if (
+              item.prerequisitesUnlocked !== prerequisitesUnlocked
+              || item.prerequisiteLockedText !== prerequisiteLockedText
+            ) {
+              item.prerequisitesUnlocked = prerequisitesUnlocked;
+              item.prerequisiteLockedText = prerequisiteLockedText;
+              changed = true;
+            }
+          });
+          return changed;
+        }
+
+        const rootItem = nodeMap.get(String(root.id));
+        const maxIterations = Math.max(nodeMap.size, 1) + 1;
+        for (let index = 0; index < maxIterations; index += 1) {
+          applyUnlockState(rootItem);
+          finalizeProgress(rootItem);
+          if (!recomputePrerequisiteState()) {
+            break;
+          }
+        }
+        applyUnlockState(rootItem);
+        finalizeProgress(rootItem);
+
+        function toRow(item, path) {
+          const currentPath = path ? `${path} / ${item.name}` : item.name;
+          const childRows = item.children
+            .sort((left, right) => Number(left.sort_order || 0) - Number(right.sort_order || 0) || String(left.id).localeCompare(String(right.id)))
+            .map((child) => toRow(child, currentPath));
+          return {
+            id: item.id,
+            parent_id: item.parent_id,
+            path: currentPath,
+            isRoot: !!item.isRoot,
+            isLeafTask: !!item.isLeafTask,
+            unlocked: !!item.unlocked,
+            lockedText: item.lockedText || '',
+            requiredLevel: item.requiredLevel,
+            currentScore: item.currentScore,
+            totalScore: item.totalScore,
+            taskCount: item.taskCount,
+            submissionCount: item.submissionCount,
+            latestTeacherScore: item.latestReviewed
+              ? getReviewScore(item.latestReviewed.teacher_score)
+              : null,
+            latestTeacherComment: item.latestReviewed ? (item.latestReviewed.teacher_comment || '') : '',
+            latestSubmittedAt: item.latestSubmission ? item.latestSubmission.submitted_at : '',
+            latestReviewedAt: item.latestReviewed ? (item.latestReviewed.scored_at || item.latestReviewed.submitted_at || '') : '',
+            children: childRows,
+          };
+        }
+
+        const rows = [];
+        function flatten(item) {
+          rows.push(item);
+          (item.children || []).forEach((child) => flatten(child));
+        }
+
+        flatten(toRow(rootItem, ''));
+        return rows;
+      }
+
       async function loadNodeScores(studentId, treeId) {
-        const rows = await api(`/api/scores?studentId=${studentId}&treeId=${treeId}`);
+        const [submissionRows, treeNodes] = await Promise.all([
+          api(`/api/submissions?studentId=${studentId}&treeId=${treeId}`),
+          api(`/api/trees/${treeId}/nodes`),
+        ]);
+        const student = state.students.find((item) => String(item.id) === String(studentId));
+        const rows = buildNodeProgressRows(treeNodes, submissionRows, student ? Number(student.level || 0) : 0);
         const tbody = document.getElementById('scoresTbody');
         tbody.innerHTML = '';
 
-        const pathMap = buildNodePathMap(rows);
-
         rows
-          .filter((row) => row.parent_id !== null)
           .forEach((row) => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${escapeHtml(pathMap.get(row.node_id) || row.name)}</td>
-              <td><input type="number" step="0.1" data-field="score" /></td>
-              <td><input data-field="comment" /></td>
-              <td>
-                <div class="score-work">
-                  <div class="small">已提交 ${row.submission_count || 0} 次</div>
-                  <textarea class="score-work-code" data-field="code-text" readonly></textarea>
-                  <div class="small">最新提交：${escapeHtml(formatDateTime(row.latest_submitted_at))}</div>
-                  <div data-field="code-image-wrap"></div>
-                </div>
-              </td>
-              <td>
-                <div class="actions">
-                  <button data-action="save" class="primary">保存</button>
-                  <button data-action="clear">清空</button>
-                </div>
-              </td>
-            `;
-
-            tr.querySelector('[data-field="score"]').value = row.score ?? '';
-            tr.querySelector('[data-field="comment"]').value = row.comment || '';
-            tr.querySelector('[data-field="code-text"]').value = row.code_text || '';
-
-            const imageWrap = tr.querySelector('[data-field="code-image-wrap"]');
-            if (row.code_image_url) {
-              const safeUrl = escapeHtml(row.code_image_url);
-              imageWrap.innerHTML = `
-                <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">查看最新图片</a>
-                <div><img class="score-work-image" src="${safeUrl}" alt="学生代码图片" /></div>
-              `;
-            } else {
-              imageWrap.innerHTML = '<span class="small">最新提交无图片</span>';
+            const latestParts = [];
+            if (row.latestSubmittedAt) {
+              latestParts.push(`提交：${escapeHtml(formatDateTime(row.latestSubmittedAt))}`);
             }
-
-            tr.querySelector('[data-action="save"]').onclick = async () => {
-              const scoreValue = tr.querySelector('[data-field="score"]').value;
-              const comment = tr.querySelector('[data-field="comment"]').value;
-              await api('/api/scores', {
-                method: 'PUT',
-                body: {
-                  studentId,
-                  nodeId: row.node_id,
-                  score: scoreValue === '' ? null : Number(scoreValue),
-                  comment,
-                },
-              });
-              showNotice(`节点评分已保存：${row.name}`);
-            };
-
-            tr.querySelector('[data-action="clear"]').onclick = async () => {
-              await api(`/api/scores?studentId=${studentId}&nodeId=${row.node_id}`, { method: 'DELETE' });
-              tr.querySelector('[data-field="score"]').value = '';
-              tr.querySelector('[data-field="comment"]').value = '';
-              showNotice(`节点评分已清空：${row.name}`);
-            };
+            if (row.latestReviewedAt) {
+              latestParts.push(`批改：${escapeHtml(formatDateTime(row.latestReviewedAt))}`);
+            }
+            if (row.latestTeacherScore !== null && !Number.isNaN(row.latestTeacherScore)) {
+              latestParts.push(`评分：${escapeHtml(String(row.latestTeacherScore))}`);
+            }
+            if (row.latestTeacherComment) {
+              latestParts.push(`评语：${escapeHtml(row.latestTeacherComment)}`);
+            }
+            if (row.isLeafTask && !row.unlocked && row.lockedText) {
+              latestParts.push(`未解锁：${escapeHtml(row.lockedText)}`);
+            }
+            const typeLabel = row.isRoot
+              ? '学习树'
+              : (row.isLeafTask ? '任务点' : '父节点');
+            tr.innerHTML = `
+              <td>${escapeHtml(row.path)}</td>
+              <td>${typeLabel}</td>
+              <td>${escapeHtml(String(row.currentScore))} / ${escapeHtml(String(row.totalScore))}</td>
+              <td>${escapeHtml(String(row.taskCount))}</td>
+              <td>${escapeHtml(String(row.submissionCount))}</td>
+              <td>${latestParts.length ? latestParts.join('<br />') : '<span class="small">暂无提交或批改</span>'}</td>
+            `;
 
             tbody.appendChild(tr);
           });
+      }
+
+      function getSubmissionFileKind(item = {}) {
+        const explicit = String(item.kind || item.fileKind || item.file_kind || '').toLowerCase();
+        if (explicit === 'image' || explicit === 'pdf') {
+          return explicit;
+        }
+        const mimeType = String(item.mimeType || item.mime_type || '').toLowerCase();
+        if (mimeType.startsWith('image/')) {
+          return 'image';
+        }
+        if (mimeType === 'application/pdf') {
+          return 'pdf';
+        }
+        const fileName = String(item.fileName || item.file_name || '').toLowerCase();
+        if (/\.(png|jpe?g|webp|gif|bmp|svg)$/.test(fileName)) {
+          return 'image';
+        }
+        if (fileName.endsWith('.pdf')) {
+          return 'pdf';
+        }
+        return 'file';
+      }
+
+      function getSubmissionFileItems(row = {}) {
+        const rawItems = Array.isArray(row.submission_file_items)
+          ? row.submission_file_items
+          : [];
+        const normalized = rawItems
+          .map((item, index) => {
+            const url = String(item.url || '').trim();
+            if (!url) {
+              return null;
+            }
+            const fileName = String(item.file_name || item.fileName || `附件${index + 1}`).trim() || `附件${index + 1}`;
+            const mimeType = String(item.mime_type || item.mimeType || '').trim();
+            return {
+              url,
+              fileName,
+              mimeType,
+              kind: getSubmissionFileKind({ fileName, mimeType, kind: item.kind }),
+            };
+          })
+          .filter(Boolean);
+        if (normalized.length) {
+          return normalized;
+        }
+
+        const imageItems = Array.isArray(row.code_image_items)
+          ? row.code_image_items
+          : (Array.isArray(row.code_image_urls)
+            ? row.code_image_urls.map((url, index) => ({
+              url,
+              file_name: `图片${index + 1}`,
+              mime_type: 'image/jpeg',
+            }))
+            : (row.code_image_url
+              ? [{
+                url: row.code_image_url,
+                file_name: '图片1',
+                mime_type: 'image/jpeg',
+              }]
+              : []));
+        return imageItems
+          .map((item, index) => {
+            const url = String(item.url || '').trim();
+            if (!url) {
+              return null;
+            }
+            return {
+              url,
+              fileName: String(item.file_name || `图片${index + 1}`),
+              mimeType: String(item.mime_type || 'image/jpeg'),
+              kind: 'image',
+            };
+          })
+          .filter(Boolean);
       }
 
       async function loadSubmissionScores(studentId, treeId) {
@@ -737,11 +3032,12 @@
             <td>${escapeHtml(formatDateTime(row.submitted_at))}</td>
             <td><textarea class="score-work-code" data-field="submission-code" readonly></textarea></td>
             <td data-field="submission-image"></td>
-            <td><input type="number" step="0.1" data-field="submission-score" /></td>
-            <td><input data-field="submission-comment" /></td>
+            <td class="submission-score-cell"><input class="submission-score-input" type="number" step="0.1" min="0" max="10" data-field="submission-score" /></td>
+            <td class="submission-comment-cell"><textarea class="submission-comment-input" data-field="submission-comment" placeholder="输入本次提交的评语"></textarea></td>
             <td>
               <div class="actions">
                 <button data-action="save-submission" class="primary">保存</button>
+                <button data-action="delete-submission" class="danger">删除</button>
               </div>
             </td>
           `;
@@ -751,27 +3047,58 @@
           tr.querySelector('[data-field="submission-comment"]').value = row.teacher_comment || '';
 
           const imageCell = tr.querySelector('[data-field="submission-image"]');
-          if (row.code_image_url) {
-            const safeUrl = escapeHtml(row.code_image_url);
-            imageCell.innerHTML = `
-              <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">查看图片</a>
-              <div><img class="score-work-image" src="${safeUrl}" alt="提交图片" /></div>
-            `;
+          const fileItems = getSubmissionFileItems(row);
+          if (fileItems.length) {
+            imageCell.innerHTML = fileItems.map((item, index) => {
+              const safeUrl = escapeHtml(item.url || '');
+              if (!safeUrl) {
+                return '';
+              }
+              const label = escapeHtml(item.fileName || `附件${index + 1}`);
+              const kindLabel = item.kind === 'image' ? '图片附件' : (item.kind === 'pdf' ? 'PDF 附件' : '文件附件');
+              return `
+                <div class="score-work-image-group">
+                  <div class="small">${escapeHtml(kindLabel)}</div>
+                  <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">打开${label}</a>
+                  ${item.kind === 'image' ? `<div><img class="score-work-image" src="${safeUrl}" alt="${label}" /></div>` : ''}
+                </div>
+              `;
+            }).join('');
           } else {
             imageCell.innerHTML = '<span class="small">无</span>';
           }
 
-          tr.querySelector('[data-action="save-submission"]').onclick = async () => {
+          tr.querySelector('[data-action="save-submission"]').onclick = async (event) => {
             const scoreValue = tr.querySelector('[data-field="submission-score"]').value;
             const comment = tr.querySelector('[data-field="submission-comment"]').value;
-            await api(`/api/submissions/${row.id}/score`, {
-              method: 'PUT',
-              body: {
-                score: scoreValue === '' ? null : Number(scoreValue),
-                comment,
-              },
+            await withButtonBusy(event.currentTarget, '保存中...', async () => {
+              await api(`/api/submissions/${row.id}/score`, {
+                method: 'PUT',
+                body: {
+                  score: scoreValue === '' ? null : Number(scoreValue),
+                  comment,
+                },
+              });
+              showNotice(`提交 #${row.id} 已批改`);
+              await loadStudents();
+              renderScoreSelectors();
+              await loadScores();
             });
-            showNotice(`提交 #${row.id} 已批改`);
+          };
+
+          tr.querySelector('[data-action="delete-submission"]').onclick = async (event) => {
+            if (!confirm(`确定删除提交 #${row.id} 吗？删除后将同时清理这次提交的附件，并重算该节点当前分。`)) {
+              return;
+            }
+            await withButtonBusy(event.currentTarget, '删除中...', async () => {
+              await api(`/api/submissions/${row.id}`, {
+                method: 'DELETE',
+              });
+              showNotice(`提交 #${row.id} 已删除`);
+              await loadStudents();
+              renderScoreSelectors();
+              await loadScores();
+            });
           };
 
           tbody.appendChild(tr);
@@ -793,128 +3120,424 @@
         ]);
       }
 
+      dashboardViewButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          setActiveDashboardView(button.dataset.viewTarget);
+        });
+      });
+
+      dashboardNavButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          setActiveDashboardView(button.dataset.navView);
+        });
+      });
+
       document.getElementById('loginForm').addEventListener('submit', async (event) => {
         event.preventDefault();
-        try {
-          const username = document.getElementById('loginUsername').value.trim();
-          const password = document.getElementById('loginPassword').value;
-          const payload = await api('/api/teacher/login', {
-            method: 'POST',
-            body: { username, password },
-          });
-          teacherToken = payload.token || '';
-          localStorage.setItem(TEACHER_TOKEN_KEY, teacherToken);
-          state.teacher = payload.teacher || null;
-          showNotice('登录成功');
-          await checkTeacherSession();
-        } catch (err) {
-          showNotice(err.message, 'error');
-        }
+        const submitButton = event.submitter || event.target.querySelector('button[type="submit"]');
+        await withButtonBusy(submitButton, '登录中...', async () => {
+          try {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const payload = await api('/api/teacher/login', {
+              method: 'POST',
+              body: { username, password },
+            });
+            teacherToken = payload.token || '';
+            localStorage.setItem(TEACHER_TOKEN_KEY, teacherToken);
+            state.teacher = payload.teacher || null;
+            refreshDashboardVisibility();
+
+            try {
+              await refreshAllData();
+              showNotice('登录成功');
+            } catch (err) {
+              showNotice(`登录成功，但后台数据加载失败：${err.message}`, 'error');
+            }
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
       });
 
-      document.getElementById('logoutBtn').addEventListener('click', async () => {
-        try {
-          await api('/api/teacher/logout', { method: 'POST' });
-        } catch (_err) {
+      document.getElementById('logoutBtn').addEventListener('click', async (event) => {
+        if (!confirm('确定退出当前老师账号吗？')) {
+          return;
         }
-        teacherToken = '';
-        localStorage.removeItem(TEACHER_TOKEN_KEY);
-        state.teacher = null;
-        refreshDashboardVisibility();
-        showNotice('已退出登录');
+
+        await withButtonBusy(event.currentTarget, '退出中...', async () => {
+          try {
+            await api('/api/teacher/logout', { method: 'POST' });
+          } catch (_err) {
+          }
+          clearTeacherSession();
+          showNotice('已退出登录');
+        });
       });
 
-      document.getElementById('refreshAllBtn').addEventListener('click', async () => {
-        try {
-          await refreshAllData();
-          showNotice('数据已刷新');
-        } catch (err) {
-          showNotice(err.message, 'error');
-        }
+      document.getElementById('refreshAllBtn').addEventListener('click', async (event) => {
+        await withButtonBusy(event.currentTarget, '刷新中...', async () => {
+          try {
+            await refreshAllData();
+            showNotice('数据已刷新');
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
       });
 
       document.getElementById('studentForm').addEventListener('submit', async (event) => {
         event.preventDefault();
-        try {
-          const username = document.getElementById('studentUsername').value.trim();
-          const name = document.getElementById('studentName').value.trim();
-          const password = document.getElementById('studentPassword').value;
-          await api('/api/students', {
-            method: 'POST',
-            body: { username, name, password },
-          });
+        const submitButton = event.submitter || event.target.querySelector('button[type="submit"]');
+        await withButtonBusy(submitButton, '创建中...', async () => {
+          try {
+            const username = document.getElementById('studentUsername').value.trim();
+            const name = document.getElementById('studentName').value.trim();
+            const password = document.getElementById('studentPassword').value;
+            await api('/api/students', {
+              method: 'POST',
+              body: { username, name, password },
+            });
 
-          event.target.reset();
-          showNotice('学生已新增');
-          await loadStudents();
-          renderScoreSelectors();
-        } catch (err) {
-          showNotice(err.message, 'error');
-        }
+            event.target.reset();
+            showNotice('学生已新增');
+            await loadStudents();
+            renderScoreSelectors();
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
       });
 
       document.getElementById('treeForm').addEventListener('submit', async (event) => {
         event.preventDefault();
+        const submitButton = event.submitter || event.target.querySelector('button[type="submit"]');
+        await withButtonBusy(submitButton, '创建中...', async () => {
+          try {
+            const title = document.getElementById('treeTitle').value.trim();
+            const rootName = document.getElementById('treeRootName').value.trim();
+            const chapterDesc = document.getElementById('treeDesc').value.trim();
+
+            const tree = await api('/api/trees', {
+              method: 'POST',
+              body: { title, rootName, chapterDesc },
+            });
+
+            state.selectedTreeId = tree.id;
+            event.target.reset();
+            showNotice('学习树已新增');
+            await loadTrees();
+            await loadSystemTreeSettings();
+            await loadNodesForSelectedTree();
+            renderScoreSelectors();
+            setActiveDashboardView('nodes');
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
+      });
+
+      document.getElementById('nodeParentSelect').addEventListener('change', () => {
+        renderNodeFormMode();
+        renderNodePrerequisiteSourceOptions();
+      });
+
+      document.getElementById('treeSearchInput').addEventListener('input', (event) => {
+        state.treeSearchKeyword = event.target.value || '';
+        renderTrees();
+      });
+
+      document.getElementById('clearTreeSearchBtn').addEventListener('click', () => {
+        state.treeSearchKeyword = '';
+        document.getElementById('treeSearchInput').value = '';
+        renderTrees();
+      });
+
+      document.getElementById('nodeParentSearchInput').addEventListener('input', (event) => {
+        state.nodeParentSearchKeyword = event.target.value || '';
+        renderNodeParentOptions();
+      });
+
+      document.getElementById('clearNodeParentSearchBtn').addEventListener('click', () => {
+        state.nodeParentSearchKeyword = '';
+        document.getElementById('nodeParentSearchInput').value = '';
+        renderNodeParentOptions();
+      });
+
+      document.getElementById('nodePrereqSearchInput').addEventListener('input', (event) => {
+        state.nodePrereqSearchKeyword = event.target.value || '';
+        renderNodePrerequisiteSourceOptions();
+      });
+
+      document.getElementById('clearNodePrereqSearchBtn').addEventListener('click', () => {
+        state.nodePrereqSearchKeyword = '';
+        document.getElementById('nodePrereqSearchInput').value = '';
+        renderNodePrerequisiteSourceOptions();
+      });
+
+      document.getElementById('studentSearchInput').addEventListener('input', (event) => {
+        state.studentSearchKeyword = event.target.value || '';
+        renderStudents();
+      });
+
+      document.getElementById('clearStudentSearchBtn').addEventListener('click', () => {
+        state.studentSearchKeyword = '';
+        document.getElementById('studentSearchInput').value = '';
+        renderStudents();
+      });
+
+      document.getElementById('closeStudentPetEditorBtn').addEventListener('click', () => {
+        resetStudentPetFrameEditor();
+        renderStudentPetFrameEditor();
+        showNotice('已收起宠物帧编辑器');
+      });
+
+      document.getElementById('studentPetFrameFiles').addEventListener('change', (event) => {
+        const files = Array.from(event.target.files || []);
+        if (!files.length) {
+          return;
+        }
         try {
-          const title = document.getElementById('treeTitle').value.trim();
-          const rootName = document.getElementById('treeRootName').value.trim();
-          const chapterDesc = document.getElementById('treeDesc').value.trim();
+          const stateKey = state.petFrameEditorStateKey;
+          if (!state.petFrameEditorOpen || !state.petFrameEditorStudentId || !stateKey) {
+            throw new Error('请先选择学生并打开宠物帧编辑器');
+          }
+          const pendingItems = files.map((file) => createTeacherPetPendingFrame(file));
+          const currentList = state.petFrameEditorPendingByState[stateKey] || [];
+          state.petFrameEditorPendingByState[stateKey] = currentList.concat(pendingItems);
+          event.target.value = '';
+          renderStudentPetFrameEditor();
+          showNotice(`已加入 ${pendingItems.length} 帧待上传图片`);
+        } catch (err) {
+          event.target.value = '';
+          showNotice(err.message, 'error');
+        }
+      });
 
-          const tree = await api('/api/trees', {
-            method: 'POST',
-            body: { title, rootName, chapterDesc },
+      document.getElementById('clearStudentPetPendingBtn').addEventListener('click', () => {
+        const stateKey = state.petFrameEditorStateKey;
+        const currentList = state.petFrameEditorPendingByState[stateKey] || [];
+        releaseTeacherPetPendingStateFrames(currentList);
+        state.petFrameEditorPendingByState[stateKey] = [];
+        document.getElementById('studentPetFrameFiles').value = '';
+        renderStudentPetFrameEditor();
+        showNotice('待上传宠物帧已清空');
+      });
+
+      document.getElementById('saveStudentPetFramesBtn').addEventListener('click', async (event) => {
+        if (!state.petFrameEditorOpen || !state.petFrameEditorStudentId) {
+          showNotice('请先选择学生', 'error');
+          return;
+        }
+        const activeStateKey = state.petFrameEditorStateKey;
+        const activeStateTitle = getTeacherPetStateTitle(activeStateKey);
+        try {
+          await withButtonBusy(event.currentTarget, '保存中...', async () => {
+            const payload = await buildStudentPetFramePayload();
+            const result = await api(`/api/students/${state.petFrameEditorStudentId}/pet-frames`, {
+              method: 'PUT',
+              body: payload,
+            });
+            const currentPending = state.petFrameEditorPendingByState[activeStateKey] || [];
+            releaseTeacherPetPendingStateFrames(currentPending);
+            state.petFrameEditorPendingByState[activeStateKey] = [];
+            state.petFrameEditorFramesByState = normalizeTeacherPetFrameStateMap(result.pet_frames || {}, state.petFrameVisualStates);
+            document.getElementById('studentPetFrameFiles').value = '';
+            renderStudentPetFrameEditor();
+            showNotice(`已保存 ${activeStateTitle} 的宠物帧序列`);
           });
-
-          state.selectedTreeId = tree.id;
-          event.target.reset();
-          showNotice('学习树已新增');
-          await loadTrees();
-          await loadNodesForSelectedTree();
-          renderScoreSelectors();
         } catch (err) {
           showNotice(err.message, 'error');
         }
+      });
+
+      document.getElementById('nodeSearchInput').addEventListener('input', (event) => {
+        state.nodeSearchKeyword = event.target.value || '';
+        renderNodesTable(state.nodesByTree.get(state.selectedTreeId) || []);
+      });
+
+      document.getElementById('clearNodeSearchBtn').addEventListener('click', () => {
+        state.nodeSearchKeyword = '';
+        document.getElementById('nodeSearchInput').value = '';
+        renderNodesTable(state.nodesByTree.get(state.selectedTreeId) || []);
+      });
+
+      document.getElementById('scoreStudentSearchInput').addEventListener('input', (event) => {
+        state.scoreStudentSearchKeyword = event.target.value || '';
+        renderScoreSelectors();
+      });
+
+      document.getElementById('clearScoreStudentSearchBtn').addEventListener('click', () => {
+        state.scoreStudentSearchKeyword = '';
+        document.getElementById('scoreStudentSearchInput').value = '';
+        renderScoreSelectors();
+      });
+
+      document.getElementById('scoreTreeSearchInput').addEventListener('input', (event) => {
+        state.scoreTreeSearchKeyword = event.target.value || '';
+        renderScoreSelectors();
+      });
+
+      document.getElementById('clearScoreTreeSearchBtn').addEventListener('click', () => {
+        state.scoreTreeSearchKeyword = '';
+        document.getElementById('scoreTreeSearchInput').value = '';
+        renderScoreSelectors();
+      });
+
+      document.getElementById('nodeProblemFiles').addEventListener('change', (event) => {
+        const files = Array.from(event.target.files || []);
+        if (!files.length) {
+          return;
+        }
+        try {
+          const pendingItems = files.map((file) => createNodeProblemPendingAttachment(file));
+          state.nodeFormPendingProblemAttachments = (state.nodeFormPendingProblemAttachments || []).concat(pendingItems);
+          event.target.value = '';
+          renderNodeProblemAttachmentState();
+          showNotice(`已加入 ${pendingItems.length} 份待上传资料`);
+        } catch (err) {
+          event.target.value = '';
+          showNotice(err.message, 'error');
+        }
+      });
+
+      document.getElementById('clearNodeProblemPendingBtn').addEventListener('click', () => {
+        state.nodeFormPendingProblemAttachments = [];
+        document.getElementById('nodeProblemFiles').value = '';
+        renderNodeProblemAttachmentState();
+        showNotice('待上传资料已清空');
+      });
+
+      document.getElementById('nodeCancelEditBtn').addEventListener('click', () => {
+        resetNodeForm();
+        showNotice('已退出节点编辑模式');
+      });
+
+      document.getElementById('nodePrereqMode').addEventListener('change', (event) => {
+        state.nodeFormPrerequisiteMode = event.target.value === 'any' ? 'any' : 'all';
+        renderNodePrerequisiteList();
+      });
+
+      document.getElementById('addNodePrereqBtn').addEventListener('click', () => {
+        const treeId = state.selectedTreeId;
+        if (!treeId) {
+          showNotice('请先选择学习树', 'error');
+          return;
+        }
+
+        const sourceSelect = document.getElementById('nodePrereqSourceSelect');
+        if (sourceSelect.disabled || !sourceSelect.value) {
+          showNotice('当前没有可用的前置节点候选项', 'error');
+          return;
+        }
+
+        const thresholdPercent = Number(document.getElementById('nodePrereqThreshold').value || 0);
+        if (!Number.isFinite(thresholdPercent) || thresholdPercent <= 0 || thresholdPercent > 100) {
+          showNotice('前置完成度必须是 0 到 100 之间的数字', 'error');
+          return;
+        }
+
+        const sourceNodeId = normalizeNodeIdValue(sourceSelect.value);
+        if (!sourceNodeId) {
+          showNotice('请选择前置节点', 'error');
+          return;
+        }
+
+        const nextRule = {
+          source_node_id: sourceNodeId,
+          threshold_percent: Number.isInteger(thresholdPercent)
+            ? thresholdPercent
+            : Number(thresholdPercent.toFixed(1)),
+        };
+        state.nodeFormPrerequisites = (state.nodeFormPrerequisites || [])
+          .filter((item) => normalizeNodeIdValue(item.source_node_id) !== nextRule.source_node_id)
+          .concat(nextRule);
+        renderNodePrerequisiteList();
+        renderNodePrerequisiteSourceOptions();
       });
 
       document.getElementById('nodeForm').addEventListener('submit', async (event) => {
         event.preventDefault();
-        try {
-          const treeId = state.selectedTreeId;
-          if (!treeId) {
-            showNotice('请先选择学习树', 'error');
-            return;
-          }
+        const submitButton = event.submitter || event.target.querySelector('button[type="submit"]');
+        const editingNode = getNodeFormEditingNode();
+        await withButtonBusy(submitButton, editingNode ? '保存中...' : '创建中...', async () => {
+          try {
+            const treeId = state.selectedTreeId;
+            if (!treeId) {
+              showNotice('请先选择学习树', 'error');
+              return;
+            }
 
-          const parentId = document.getElementById('nodeParentSelect').value;
-          const name = document.getElementById('nodeName').value.trim();
-          const sortOrder = Number(document.getElementById('nodeSort').value || 0);
+            const parentId = getNodeFormTargetParentId();
+            const name = document.getElementById('nodeName').value.trim();
+            const sortOrder = Number(document.getElementById('nodeSort').value || 0);
+            const milestoneLevel = Number(document.getElementById('nodeMilestoneLevel').value || 0);
+            const requiredLevel = Number(document.getElementById('nodeRequiredLevel').value || 0);
+            const unlockPrerequisites = state.nodeFormPrerequisites || [];
+            const unlockPrerequisiteMode = state.nodeFormPrerequisiteMode === 'any' ? 'any' : 'all';
+            const problemAttachments = await buildNodeProblemAttachmentsPayload();
 
-          await api(`/api/trees/${treeId}/nodes`, {
-            method: 'POST',
-            body: {
+            if (!editingNode && !parentId) {
+              showNotice('新增子节点必须选择父节点', 'error');
+              return;
+            }
+
+            const body = {
               parentId,
               name,
               sortOrder,
-            },
-          });
+              milestoneLevel,
+              requiredLevel,
+              unlockPrerequisites,
+              unlockPrerequisiteMode,
+            };
+            if (editingNode || problemAttachments.length) {
+              body.problemAttachments = problemAttachments;
+            }
 
-          event.target.reset();
-          document.getElementById('nodeSort').value = '0';
-          showNotice('节点已新增');
-          await loadNodesForSelectedTree();
-        } catch (err) {
-          showNotice(err.message, 'error');
-        }
+            if (editingNode) {
+              await api(`/api/nodes/${editingNode.id}`, {
+                method: 'PUT',
+                body,
+              });
+              state.nodeFormEditingId = null;
+              state.nodeFormPrerequisites = [];
+              state.nodeFormPrerequisiteMode = 'all';
+              state.nodeFormExistingProblemAttachments = [];
+              state.nodeFormPendingProblemAttachments = [];
+              showNotice(problemAttachments.length ? `节点与题目资料已更新：${name}` : `节点已更新：${name}`);
+            } else {
+              await api(`/api/trees/${treeId}/nodes`, {
+                method: 'POST',
+                body,
+              });
+              showNotice(problemAttachments.length ? '节点与题目资料已新增' : '节点已新增');
+            }
+
+            await loadNodesForSelectedTree();
+            await loadSystemTreeSettings();
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
       });
 
-      document.getElementById('loadScoresBtn').addEventListener('click', async () => {
-        try {
-          await loadScores();
-        } catch (err) {
-          showNotice(err.message, 'error');
-        }
+      document.getElementById('loadScoresBtn').addEventListener('click', async (event) => {
+        await withButtonBusy(event.currentTarget, '加载中...', async () => {
+          try {
+            await loadScores();
+          } catch (err) {
+            showNotice(err.message, 'error');
+          }
+        });
       });
 
+      setActiveDashboardView(state.activeView);
+      renderNodeFormMode();
+      renderNodePrerequisiteSourceOptions();
+      renderNodePrerequisiteList();
+      renderNodeProblemAttachmentState();
+      renderDashboardSummary();
       checkTeacherSession();
     </script>
   </body>

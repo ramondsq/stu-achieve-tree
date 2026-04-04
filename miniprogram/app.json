@@ -1,7 +1,9 @@
 {
   "pages": [
     "pages/login/login",
-    "pages/trees/trees"
+    "pages/trees/trees",
+    "pages/rewards/rewards",
+    "pages/pet/pet"
   ],
   "window": {
     "navigationBarTitleText": "学习成就树",

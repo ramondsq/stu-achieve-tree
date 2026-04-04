@@ -1,5 +1,6 @@
 const { request } = require('../../utils/request');
 const { setSession, clearSession } = require('../../utils/auth');
+const { pickRandomTip } = require('../../utils/loading-tips.js');
 
 Page({
   data: {
@@ -8,10 +9,56 @@ Page({
     loading: false,
     errorText: '',
     successText: '',
+    startupTip: pickRandomTip(),
+    showStartupOverlay: false,
+    startupOverlayTip: null,
   },
 
   onShow() {
     clearSession();
+    this.refreshStartupTip();
+    this.tryShowStartupOverlay();
+  },
+
+  tryShowStartupOverlay() {
+    const app = getApp();
+    if (!app || typeof app.consumeStartupOverlayTip !== 'function') {
+      return;
+    }
+    const tip = app.consumeStartupOverlayTip();
+    if (!tip) {
+      return;
+    }
+    this.setData({
+      showStartupOverlay: true,
+      startupOverlayTip: tip,
+      startupTip: tip,
+    });
+  },
+
+  refreshStartupTip() {
+    const app = getApp();
+    const previousKey = this.data.startupTip ? this.data.startupTip.key : '';
+    const nextTip = app && typeof app.nextStartupTip === 'function'
+      ? app.nextStartupTip(previousKey)
+      : pickRandomTip(previousKey);
+    this.setData({ startupTip: nextTip });
+  },
+
+  handleChangeStartupOverlayTip() {
+    const app = getApp();
+    const previousKey = this.data.startupOverlayTip ? this.data.startupOverlayTip.key : '';
+    const nextTip = app && typeof app.nextStartupTip === 'function'
+      ? app.nextStartupTip(previousKey)
+      : pickRandomTip(previousKey);
+    this.setData({
+      startupOverlayTip: nextTip,
+      startupTip: nextTip,
+    });
+  },
+
+  handleCloseStartupOverlay() {
+    this.setData({ showStartupOverlay: false });
   },
 
   onUsernameInput(e) {
@@ -27,9 +74,11 @@ Page({
   },
 
   gotoTrees() {
-    wx.redirectTo({
-      url: '/pages/trees/trees',
-    });
+    setTimeout(() => {
+      wx.redirectTo({
+        url: '/pages/trees/trees',
+      });
+    }, 280);
   },
 
   async handlePasswordLogin() {
@@ -53,6 +102,7 @@ Page({
 
       setSession(payload);
       this.setMessage({ successText: '登录成功，正在进入学习树...' });
+      wx.showToast({ title: '登录成功', icon: 'success' });
       this.gotoTrees();
     } catch (err) {
       this.setMessage({ errorText: err.message || '登录失败' });
@@ -77,6 +127,7 @@ Page({
 
       setSession(payload);
       this.setMessage({ successText: '微信登录成功，正在进入学习树...' });
+      wx.showToast({ title: '微信登录成功', icon: 'success' });
       this.gotoTrees();
     } catch (err) {
       this.setMessage({ errorText: err.message || '微信登录失败' });
@@ -109,6 +160,7 @@ Page({
 
       setSession(payload);
       this.setMessage({ successText: '绑定成功，正在进入学习树...' });
+      wx.showToast({ title: '绑定成功', icon: 'success' });
       this.gotoTrees();
     } catch (err) {
       this.setMessage({ errorText: err.message || '微信绑定失败' });

@@ -4,6 +4,7 @@
   "private": true,
   "main": "index.js",
   "dependencies": {
+    "cos-nodejs-sdk-v5": "^2.15.4",
     "wx-server-sdk": "^3.0.1"
   }
 }

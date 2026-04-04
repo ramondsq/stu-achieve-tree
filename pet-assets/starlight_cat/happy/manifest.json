@@ -1,0 +1,15 @@
+{
+  "pet_name": "starlight_cat",
+  "state_name": "happy",
+  "total_frames": 12,
+  "completed_frames": [
+    "001.png",
+    "002.png",
+    "003.png"
+  ],
+  "last_completed_file": "003.png",
+  "anchor_reference_image": "/home/xf/code/stu-achieve-tree/pet-assets/starlight_cat/reference/base.png",
+  "output_dir": "/home/xf/code/stu-achieve-tree/pet-assets/starlight_cat/happy",
+  "status": "in_progress",
+  "updated_at": "2026-04-02T18:51:45.107Z"
+}

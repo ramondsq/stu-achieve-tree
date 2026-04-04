@@ -17,6 +17,13 @@ function getStudent() {
   return wx.getStorageSync(STUDENT_KEY) || null;
 }
 
+function setStudentProfile(student) {
+  if (!student) {
+    return;
+  }
+  wx.setStorageSync(STUDENT_KEY, student);
+}
+
 function clearSession() {
   wx.removeStorageSync(TOKEN_KEY);
   wx.removeStorageSync(STUDENT_KEY);
@@ -25,6 +32,7 @@ function clearSession() {
 module.exports = {
   TOKEN_KEY,
   setSession,
+  setStudentProfile,
   getToken,
   getStudent,
   clearSession,

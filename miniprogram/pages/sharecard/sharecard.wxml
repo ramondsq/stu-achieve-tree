@@ -1,0 +1,141 @@
+<view class="share-page {{card ? card.themeClass : 'theme-1'}}">
+  <view class="share-grid"></view>
+
+  <view wx:if="{{loading}}" class="share-status-card">
+    <view class="share-status-title">正在生成资料卡</view>
+    <view class="share-status-copy">请稍等。</view>
+  </view>
+
+  <view wx:elif="{{errorText && !card}}" class="share-status-card error">
+    <view class="share-status-title">加载失败</view>
+    <view class="share-status-copy">{{errorText}}</view>
+    <button class="share-btn ghost" bindtap="handleRefresh">重试</button>
+  </view>
+
+  <view wx:elif="{{card}}" class="share-shell">
+    <view class="share-card">
+      <view class="share-glow share-glow-a"></view>
+      <view class="share-glow share-glow-b"></view>
+
+      <view class="share-card-head">
+        <view class="share-card-main">
+          <view class="share-title">{{card.nodeName}}</view>
+          <view wx:if="{{card.shareSubtitle}}" class="share-subtitle">{{card.shareSubtitle}}</view>
+        </view>
+        <view class="share-level-chip">Lv.{{card.studentLevel}}</view>
+      </view>
+
+      <view class="share-meta-row">
+        <view class="share-meta">{{card.studentDisplayName}} · {{card.generatedAtText}}</view>
+      </view>
+
+      <view wx:if="{{card.pathText}}" class="share-path">{{card.pathText}}</view>
+
+      <view class="share-stat-grid">
+        <block wx:for="{{card.metrics}}" wx:key="label" wx:for-item="metric">
+          <view class="share-stat-card">
+            <view class="share-stat-label">{{metric.label}}</view>
+            <view class="share-stat-value">{{metric.value}}</view>
+          </view>
+        </block>
+      </view>
+
+      <view class="share-tag-row">
+        <block wx:for="{{card.tags}}" wx:key="*this" wx:for-item="tag">
+          <view class="share-tag">{{tag}}</view>
+        </block>
+      </view>
+
+      <view wx:if="{{card.isMonthSummary}}" class="share-section share-calendar-section">
+        <view class="share-calendar-topline">
+          <view class="share-calendar-copy">
+            <view class="share-section-title">月度热力图</view>
+            <view class="share-calendar-summary">{{card.summaryCalendar.summaryText}}</view>
+          </view>
+          <view class="share-calendar-month-chip">{{card.summaryCalendar.monthLabel}}</view>
+        </view>
+        <view class="share-calendar-stats">
+          <view class="share-calendar-metric">
+            <view class="share-calendar-metric-value">{{card.summaryCalendar.activeDays}}</view>
+            <view class="share-calendar-metric-label">活跃天数</view>
+          </view>
+          <view class="share-calendar-metric">
+            <view class="share-calendar-metric-value">{{card.summaryCalendar.submittedCount}}</view>
+            <view class="share-calendar-metric-label">提交次数</view>
+          </view>
+          <view class="share-calendar-metric">
+            <view class="share-calendar-metric-value">{{card.summaryCalendar.reviewedDays}}</view>
+            <view class="share-calendar-metric-label">已评分天</view>
+          </view>
+        </view>
+        <view class="share-calendar-board">
+          <view class="share-calendar-weekdays">
+            <block wx:for="{{card.summaryCalendar.weekdayLabels}}" wx:key="*this" wx:for-item="weekday">
+              <view class="share-calendar-weekday">{{weekday}}</view>
+            </block>
+          </view>
+          <view class="share-calendar-grid">
+            <block wx:for="{{card.summaryCalendar.cells}}" wx:key="key" wx:for-item="cell">
+              <view class="share-calendar-cell {{cell.bandClass}} {{cell.placeholder ? 'share-calendar-cell-placeholder' : ''}} {{cell.isToday ? 'share-calendar-cell-today' : ''}}">
+                <text wx:if="{{!cell.placeholder}}" class="share-calendar-day">{{cell.dayLabel}}</text>
+              </view>
+            </block>
+          </view>
+        </view>
+        <view class="calendar-legend share-calendar-legend">
+          <block wx:for="{{card.summaryCalendar.legendItems}}" wx:key="label" wx:for-item="legend">
+            <view class="calendar-legend-item">
+              <view class="calendar-legend-dot {{legend.bandClass}}"></view>
+              <text>{{legend.label}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+
+      <view wx:if="{{card.coverImageUrl}}" class="share-cover-panel">
+        <image src="{{card.coverImageUrl}}" mode="aspectFill" class="share-cover-image" />
+        <view class="share-cover-mask">
+          <view class="share-cover-title">{{card.coverTitle}}</view>
+          <view class="share-cover-copy">共 {{card.coverImageCount}} 张</view>
+        </view>
+      </view>
+
+      <view class="share-section">
+        <view class="share-section-head">
+          <view class="share-section-title">{{card.codeSectionTitle}}</view>
+          <view class="share-section-meta">{{card.codeLineCount}} 行</view>
+        </view>
+        <view class="share-code-block">{{card.codeSnippet}}</view>
+      </view>
+
+      <view wx:if="{{card.insightLines.length}}" class="share-section teacher-section">
+        <view class="share-section-head">
+          <view class="share-section-title">{{card.insightTitle}}</view>
+          <view class="share-section-meta">{{card.insightMeta}}</view>
+        </view>
+        <view class="share-insight-list">
+          <block wx:for="{{card.insightLines}}" wx:key="*this" wx:for-item="line">
+            <view class="share-insight-item">{{line}}</view>
+          </block>
+        </view>
+      </view>
+
+      <view class="share-footer">
+        <view>{{card.footerLeftText}}</view>
+        <view>{{card.footerRightText}}</view>
+      </view>
+    </view>
+
+    <view class="share-actions">
+      <button class="share-btn primary" loading="{{saving}}" bindtap="handleSavePoster">保存资料卡</button>
+      <button class="share-btn ghost" open-type="share">转发给好友</button>
+      <button class="share-btn ghost" bindtap="handleTimelineTip">朋友圈分享</button>
+      <button class="share-btn ghost" bindtap="handleRefresh">重新加载</button>
+    </view>
+
+    <view class="share-tip">朋友圈请用右上角“...”或直接分享保存图。</view>
+    <view wx:if="{{errorText}}" class="share-inline-error">{{errorText}}</view>
+  </view>
+
+  <canvas canvas-id="sharePosterCanvas" class="share-poster-canvas"></canvas>
+</view>
